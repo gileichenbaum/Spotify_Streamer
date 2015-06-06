@@ -1,7 +1,6 @@
 package com.spotify.gil.spotifystreamer.internal;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
@@ -12,8 +11,6 @@ import kaaes.spotify.webapi.android.models.Track;
  */
 public class SpotifyTrack implements Comparable<SpotifyTrack> {
 
-    private static final String TAG = SpotifyTrack.class.getSimpleName();
-
     public final static String ARTIST_NAME = "artist_name";
     public final static String TRACK_URI = "track_uri";
     public final static String ALBUM_NAME = "album_name";
@@ -22,7 +19,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     public final static String TRACK_NAME = "track_name";
     public static final String TRACKS_BUNDLE = "track_bundle";
     public static final String INDEX = "index";
-
+    private static final String TAG = SpotifyTrack.class.getSimpleName();
     private final String mTrackName;
     private final String mArtistName;
     private final String mTrackUri;
@@ -31,7 +28,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     private final Integer mIndex;
     private final String mThumbnailUrl;
 
-    public SpotifyTrack(final int index,Track track) {
+    public SpotifyTrack(final int index, Track track) {
 
         mIndex = index;
         mTrackName = track.name;
@@ -40,8 +37,6 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
         mAlbumName = track.album.name;
         mAlbumArtUri = Spotify.getImage(track.album.images, Spotify.ImageSize.LARGE).url;
         mThumbnailUrl = Spotify.getImage(track.album.images, Spotify.ImageSize.SMALL).url;
-
-        Log.i(TAG,toString());
     }
 
     public SpotifyTrack(final Bundle bundle) {

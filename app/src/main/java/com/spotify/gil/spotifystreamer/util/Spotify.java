@@ -1,9 +1,6 @@
 package com.spotify.gil.spotifystreamer.util;
 
 import android.util.Log;
-import android.widget.ImageView;
-
-import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,21 +17,6 @@ import kaaes.spotify.webapi.android.models.Tracks;
 public class Spotify {
 
     private static final boolean DEBUG = false;
-
-    //Album art thumbnail (large (640px for Now Playing screen)
-    // and small (200px for list items))
-    public enum ImageSize {
-        SMALL(200), LARGE(640);
-
-        private final int mPixelSize;
-
-        private ImageSize(final int pixelSize) {
-            mPixelSize = pixelSize;
-        }
-    }
-
-    ;
-
     private final static HashMap<String, Object> COUNTRY_OPTIONS = new HashMap<String, Object>() {{
         put("country", "US");
     }};
@@ -50,25 +32,19 @@ public class Spotify {
         }
     }
 
-    public static ArtistsPager searchArtists(String searchString) {
-        return sSpotifyService.searchArtists(searchString + "*", ARTIST_SEARCH_OPTIONS);
+    public static ArtistsPager searchArtists(String searchString, Integer offset) {
+        if (offset == null || offset == 0) {
+            return sSpotifyService.searchArtists(searchString + "*", ARTIST_SEARCH_OPTIONS);
+        } else {
+            final HashMap<String, Object> params = new HashMap<>();
+            params.put("type", "artist");
+            params.put("offset", offset);
+            return sSpotifyService.searchArtists(searchString + "*", params);
+        }
     }
 
     public static Tracks getArtistSongs(String artistID) {
         return sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
-    }
-
-    public static void setupImage(List<Image> images, final ImageView imageView, final ImageSize size) {
-        if (images != null && !images.isEmpty()) {
-            final Image image = getImage(images, size);
-            if (image != null) {
-                Picasso.with(imageView.getContext()).load(image.url).into(imageView);
-            } else {
-                imageView.setImageDrawable(null);
-            }
-        } else {
-            imageView.setImageDrawable(null);
-        }
     }
 
     public static Image getImage(List<Image> images, ImageSize size) {
@@ -100,5 +76,17 @@ public class Spotify {
             Log.i("image", "selected image dimens=" + selectedImage.width + "x" + selectedImage.height);
         }
         return selectedImage;
+    }
+
+    //Album art thumbnail (large (640px for Now Playing screen)
+    // and small (200px for list items))
+    public enum ImageSize {
+        SMALL(200), LARGE(640);
+
+        private final int mPixelSize;
+
+        ImageSize(final int pixelSize) {
+            mPixelSize = pixelSize;
+        }
     }
 }

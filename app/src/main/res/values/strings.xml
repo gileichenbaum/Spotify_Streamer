@@ -6,4 +6,5 @@
     <string name="title_activity_artist">Top 10 Tracks</string>
     <string name="title_activity_player">Player Activity</string>
     <string name="search_text_hint">Search for an artist…</string>
+    <string name="loading">Loading more…</string>
 </resources>

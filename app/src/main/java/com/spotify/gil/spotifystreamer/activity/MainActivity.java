@@ -16,9 +16,9 @@ import android.widget.Toast;
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.adapter.SpotifyArtistAdapter;
 import com.spotify.gil.spotifystreamer.async.SearchArtistsAsyncTask;
+import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
-import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 
@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private SpotifyArtistAdapter mArtistAdapter;
-    private AsyncTask<String, Artists, ArtistsPager> mSearchTask;
+    private AsyncTask<Object, Artists, ArtistsPager> mSearchTask;
     private Toast mEmptyResultToast;
     private TextView mSearchTextView;
 
@@ -67,12 +67,12 @@ public class MainActivity extends AppCompatActivity {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final Artist artist = mArtistAdapter.getItem(position);
+                final SpotifyArtist artist = mArtistAdapter.getItem(position);
                 final Intent intent = new Intent();
                 intent.setClass(view.getContext(), TracksActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra(TracksActivity.ARTIST_NAME,artist.name);
-                intent.putExtra(TracksActivity.ARTIST_ID, artist.id);
+                intent.putExtra(TracksActivity.ARTIST_NAME, artist.getName());
+                intent.putExtra(TracksActivity.ARTIST_ID, artist.getSpotifyId());
                 view.getContext().startActivity(intent);
             }
         });
@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void searchForArtist(String searchString) {
 
+        mArtistAdapter.setSearchString(searchString);
         mSearchTask = new SearchArtistsAsyncTask(){
 
             @Override
@@ -91,8 +92,15 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isCancelled()) return;
 
+
                 if (artistsPager != null && artistsPager.artists != null && artistsPager.artists.items != null && artistsPager.artists.items.size() > 0) {
-                    mArtistAdapter.addAll(artistsPager.artists.items);
+
+                    for (int i = 0; i < artistsPager.artists.items.size(); i++) {
+                        mArtistAdapter.add(new SpotifyArtist(artistsPager.artists.items.get(i)));
+                    }
+
+                    mArtistAdapter.setHasMore(artistsPager.artists.total > mArtistAdapter.getCount());
+
                 } else {
                     showNoResultsToast();
                 }

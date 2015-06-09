@@ -80,40 +80,54 @@ public class MainActivity extends AppCompatActivity {
 
     private void searchForArtist(String searchString) {
 
-        mArtistAdapter.setSearchString(searchString);
-        mSearchTask = new SearchArtistsAsyncTask(){
+        if (mEmptyResultToast != null) {
+            mEmptyResultToast.cancel();
+        }
 
-            @Override
-            protected void onPostExecute(ArtistsPager artistsPager) {
+        if (Spotify.isConnected(this)) {
 
-                if (mEmptyResultToast != null) {
-                    mEmptyResultToast.cancel();
-                }
+            mArtistAdapter.setSearchString(searchString);
 
-                if (isCancelled()) return;
+            mSearchTask = new SearchArtistsAsyncTask() {
 
+                @Override
+                protected void onPostExecute(ArtistsPager artistsPager) {
 
-                if (artistsPager != null && artistsPager.artists != null && artistsPager.artists.items != null && artistsPager.artists.items.size() > 0) {
-
-                    for (int i = 0; i < artistsPager.artists.items.size(); i++) {
-                        mArtistAdapter.add(new SpotifyArtist(artistsPager.artists.items.get(i)));
+                    if (mEmptyResultToast != null) {
+                        mEmptyResultToast.cancel();
                     }
 
-                    mArtistAdapter.setHasMore(artistsPager.artists.total > mArtistAdapter.getCount());
+                    if (isCancelled()) return;
 
-                } else {
-                    showNoResultsToast();
+
+                    if (artistsPager != null && artistsPager.artists != null && artistsPager.artists.items != null && artistsPager.artists.items.size() > 0) {
+
+                        for (int i = 0; i < artistsPager.artists.items.size(); i++) {
+                            mArtistAdapter.add(new SpotifyArtist(artistsPager.artists.items.get(i)));
+                        }
+
+                        mArtistAdapter.setHasMore(artistsPager.artists.total > mArtistAdapter.getCount());
+
+                    } else {
+                        showNoResultsToast();
+                    }
                 }
-            }
 
-        }.execute(searchString);
+            }.execute(searchString);
+        } else {
+            mEmptyResultToast = Spotify.showNotConnected(this);
+        }
     }
 
     private void showNoResultsToast() {
 
-        final String message = getString(R.string.no_results_found,mSearchTextView.getText());
-        mEmptyResultToast = makeText(this, message , Toast.LENGTH_LONG);
-        mEmptyResultToast.show();
+        if (Spotify.isConnected(this)) {
+            final String message = getString(R.string.no_results_found, mSearchTextView.getText());
+            mEmptyResultToast = makeText(this, message, Toast.LENGTH_LONG);
+            mEmptyResultToast.show();
+        } else {
+            mEmptyResultToast = Spotify.showNotConnected(this);
+        }
     }
 /*
     @Override

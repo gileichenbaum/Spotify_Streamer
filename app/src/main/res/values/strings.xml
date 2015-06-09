@@ -7,4 +7,5 @@
     <string name="title_activity_player">Player Activity</string>
     <string name="search_text_hint">Search for an artist…</string>
     <string name="loading">Loading more…</string>
+    <string name="no_connection">We can\'t connect to the internet.\r\nPlease check your connection and try again.</string>
 </resources>

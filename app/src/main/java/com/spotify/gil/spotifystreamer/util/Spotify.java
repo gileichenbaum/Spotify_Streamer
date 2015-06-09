@@ -1,6 +1,12 @@
 package com.spotify.gil.spotifystreamer.util;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.spotify.gil.spotifystreamer.R;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +16,8 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Tracks;
+
+import static android.widget.Toast.makeText;
 
 /**
  * Created by GIL on 30/05/2015.
@@ -33,18 +41,26 @@ public class Spotify {
     }
 
     public static ArtistsPager searchArtists(String searchString, Integer offset) {
-        if (offset == null || offset == 0) {
-            return sSpotifyService.searchArtists(searchString + "*", ARTIST_SEARCH_OPTIONS);
-        } else {
-            final HashMap<String, Object> params = new HashMap<>();
-            params.put("type", "artist");
-            params.put("offset", offset);
-            return sSpotifyService.searchArtists(searchString + "*", params);
+        try {
+            if (offset == null || offset == 0) {
+                return sSpotifyService.searchArtists(searchString + "*", ARTIST_SEARCH_OPTIONS);
+            } else {
+                final HashMap<String, Object> params = new HashMap<>();
+                params.put("type", "artist");
+                params.put("offset", offset);
+                return sSpotifyService.searchArtists(searchString + "*", params);
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
 
     public static Tracks getArtistSongs(String artistID) {
-        return sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
+        try {
+            return sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static Image getImage(List<Image> images, ImageSize size) {
@@ -78,6 +94,18 @@ public class Spotify {
         return selectedImage;
     }
 
+    public static boolean isConnected(final Context context) {
+        final ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
+    }
+
+    public static Toast showNotConnected(final Context context) {
+        final Toast toast = makeText(context, R.string.no_connection, Toast.LENGTH_LONG);
+        toast.show();
+        return toast;
+    }
+
     //Album art thumbnail (large (640px for Now Playing screen)
     // and small (200px for list items))
     public enum ImageSize {
@@ -89,4 +117,5 @@ public class Spotify {
             mPixelSize = pixelSize;
         }
     }
+
 }

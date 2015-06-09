@@ -10,9 +10,11 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
+import com.spotify.gil.spotifystreamer.util.Spotify;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -24,10 +26,9 @@ import java.util.Set;
 
 public class PlayerActivity extends AppCompatActivity {
 
-    private static final String TAG = PlayerActivity.class.getSimpleName();
-
-    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("mm:ss", Locale.US);
     public static final String AUTO_PLAY = "auto_play";
+    private static final String TAG = PlayerActivity.class.getSimpleName();
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("mm:ss", Locale.US);
     private static final String CURRENT_TRACK_INDEX = "current_index";
 
     private MediaPlayer mMediaPlayer;
@@ -45,6 +46,7 @@ public class PlayerActivity extends AppCompatActivity {
     private View mPrevTrackBtn;
     private View mNextTrackBtn;
     private int mRetryCount;
+    private Toast mNoConnectionToast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,37 +106,45 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void onTrackChanged() {
 
-        mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
+        if (Spotify.isConnected(this)) {
 
-        final SpotifyTrack track = mTracks.get(mCurrentTrackIndex);
-
-        if (mCurrentTrack != track) {
-
-            mCurrentTrack = track;
-
-            Picasso.with(this).load(track.getArtUrl()).into(mImageView);
-            mAlbumNameTxt.setText(track.getAlbumName());
-            mArtistNameTxt.setText(track.getArtistName());
-            mTrackNameTxt.setText(track.getTrackName());
-
-            try {
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                }
-                mMediaPlayer.reset();
-                mMediaPlayer.setDataSource(track.getTrackUri());
-                mMediaPlayer.prepareAsync();
-
-            } catch (IllegalStateException il) {
-                if (mRetryCount < 10) {
-                    mRetryCount++;
-                    onTrackChanged();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (mNoConnectionToast != null) {
+                mNoConnectionToast.cancel();
             }
-        }
 
+            mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
+
+            final SpotifyTrack track = mTracks.get(mCurrentTrackIndex);
+
+            if (mCurrentTrack != track) {
+
+                mCurrentTrack = track;
+
+                Picasso.with(this).load(track.getArtUrl()).into(mImageView);
+                mAlbumNameTxt.setText(track.getAlbumName());
+                mArtistNameTxt.setText(track.getArtistName());
+                mTrackNameTxt.setText(track.getTrackName());
+
+                try {
+                    if (mMediaPlayer.isPlaying()) {
+                        mMediaPlayer.stop();
+                    }
+                    mMediaPlayer.reset();
+                    mMediaPlayer.setDataSource(track.getTrackUri());
+                    mMediaPlayer.prepareAsync();
+
+                } catch (IllegalStateException il) {
+                    if (mRetryCount < 10) {
+                        mRetryCount++;
+                        onTrackChanged();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            mNoConnectionToast = Spotify.showNotConnected(this);
+        }
     }
 
     private void initListeners() {

@@ -7,11 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.adapter.SpotifySongsAdapter;
 import com.spotify.gil.spotifystreamer.async.FetchArtistSongsAsyncTask;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
+import com.spotify.gil.spotifystreamer.util.Spotify;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,12 +24,12 @@ import kaaes.spotify.webapi.android.models.Tracks;
 
 public class TracksActivity extends AppCompatActivity {
 
-    private final static String TAG = TracksActivity.class.getSimpleName();
     public static final String ARTIST_ID = "artist_id";
     public static final String ARTIST_NAME = "artist_name";
-
+    private final static String TAG = TracksActivity.class.getSimpleName();
     private SpotifySongsAdapter mAdapter;
     private String mArtistName;
+    private Toast mNoConnectionToast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,22 +77,38 @@ public class TracksActivity extends AppCompatActivity {
 
     public void setArtistId(String artistID) {
 
-        new FetchArtistSongsAsyncTask() {
-            @Override
-            protected void onPostExecute(Tracks tracks) {
-                super.onPostExecute(tracks);
+        if (mNoConnectionToast != null) {
+            mNoConnectionToast.cancel();
+        }
 
-                mAdapter.clear();
+        if (Spotify.isConnected(this)) {
+            new FetchArtistSongsAsyncTask() {
+                @Override
+                protected void onPostExecute(Tracks tracks) {
+                    super.onPostExecute(tracks);
 
-                int i=0;
-                if (tracks != null && tracks.tracks != null && !tracks.tracks.isEmpty()) {
-                    for (Track track : tracks.tracks) {
-                        mAdapter.add(new SpotifyTrack(i++,track));
+                    mAdapter.clear();
+
+                    int i = 0;
+                    if (tracks != null && tracks.tracks != null && !tracks.tracks.isEmpty()) {
+                        for (Track track : tracks.tracks) {
+                            mAdapter.add(new SpotifyTrack(i++, track));
+                        }
+                    } else {
+                        checkConnection();
                     }
                 }
-            }
-        }.execute(artistID);
+            }.execute(artistID);
+        } else {
+            mNoConnectionToast = Spotify.showNotConnected(this);
+        }
 
+    }
+
+    private void checkConnection() {
+        if (!Spotify.isConnected(this)) {
+            mNoConnectionToast = Spotify.showNotConnected(this);
+        }
     }
 
    /* @Override

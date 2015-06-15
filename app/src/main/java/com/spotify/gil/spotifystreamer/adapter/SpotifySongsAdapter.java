@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
-import com.squareup.picasso.Picasso;
+import com.spotify.gil.spotifystreamer.util.Spotify;
 
 /**
  * Created by GIL on 30/05/2015.
@@ -54,7 +54,8 @@ public class SpotifySongsAdapter extends ArrayAdapter<SpotifyTrack> {
             if (track != null) {
                 mSongNameTextView.setText(track.getTrackName());
                 mAlbumNameTextView.setText(track.getAlbumName());
-                Picasso.with(mImageView.getContext()).load(track.getThumbnailUrl()).into(mImageView);
+                final String thumbnailUrl = track.getThumbnailUrl();
+                Spotify.setupImage(mImageView, thumbnailUrl);
             } else {
                 mSongNameTextView.setText(null);
                 mAlbumNameTextView.setText(null);

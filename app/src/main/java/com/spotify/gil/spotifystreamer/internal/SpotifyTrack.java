@@ -1,9 +1,11 @@
 package com.spotify.gil.spotifystreamer.internal;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
+import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Track;
 
 /**
@@ -17,9 +19,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     public final static String ALBUM_ART_URI = "art_uri";
     public final static String ALBUM_THUMBNAIL_URI = "art_thumbnail_uri";
     public final static String TRACK_NAME = "track_name";
-    public static final String TRACKS_BUNDLE = "track_bundle";
     public static final String INDEX = "index";
-    private static final String TAG = SpotifyTrack.class.getSimpleName();
     private final String mTrackName;
     private final String mArtistName;
     private final String mTrackUri;
@@ -32,7 +32,16 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
 
         mIndex = index;
         mTrackName = track.name;
-        mArtistName = track.artists.get(0).name;
+
+        if (track.artists.size() == 1) {
+            mArtistName = track.artists.get(0).name;
+        } else {
+            final StringBuilder builder = new StringBuilder();
+            for (ArtistSimple artist : track.artists) {
+                builder.append(artist.name).append(" & ");
+            }
+            mArtistName = builder.substring(0, builder.length() - 3);
+        }
         mTrackUri = track.preview_url;
         mAlbumName = track.album.name;
         mAlbumArtUri = Spotify.getImage(track.album.images, Spotify.ImageSize.LARGE).url;
@@ -53,6 +62,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
         final Bundle bundle = new Bundle();
         bundle.putString(TRACK_NAME, mTrackName);
         bundle.putString(ARTIST_NAME, mAlbumName);
+        bundle.putString(ARTIST_NAME, mArtistName);
         bundle.putString(TRACK_URI, mTrackUri);
         bundle.putString(ALBUM_NAME, mAlbumName);
         bundle.putString(ALBUM_ART_URI, mAlbumArtUri);
@@ -86,10 +96,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     }
 
     @Override
-    public int compareTo(SpotifyTrack another) {
-
-        if (another == null) return -1;
-
+    public int compareTo(@NonNull SpotifyTrack another) {
         return mIndex.compareTo(another.mIndex);
     }
 

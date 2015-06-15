@@ -3,11 +3,16 @@ package com.spotify.gil.spotifystreamer.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
+import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
+import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,6 +20,7 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
+import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
 import static android.widget.Toast.makeText;
@@ -55,12 +61,28 @@ public class Spotify {
         }
     }
 
-    public static Tracks getArtistSongs(String artistID) {
+    public static List<SpotifyTrack> getArtistSongs(String artistID) {
+
         try {
-            return sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
+            final Tracks artistTopTracks = sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
+            if (artistTopTracks != null && artistTopTracks.tracks != null && artistTopTracks.tracks.size() > 0) {
+
+                final List<SpotifyTrack> tracks = new ArrayList<>(artistTopTracks.tracks.size());
+
+                int i = 0;
+
+                for (Track track : artistTopTracks.tracks) {
+                    tracks.add(new SpotifyTrack(i++, track));
+                }
+
+                return tracks;
+            }
+
         } catch (Exception e) {
             return null;
         }
+
+        return null;
     }
 
     public static Image getImage(List<Image> images, ImageSize size) {
@@ -105,6 +127,28 @@ public class Spotify {
         toast.show();
         return toast;
     }
+
+    public static void setupImage(final ImageView imageView, final String artUrl) {
+
+        if (imageView != null) {
+
+            final Context context = imageView.getContext();
+
+            if (context != null) {
+                if (TextUtils.isEmpty(artUrl)) {
+                    imageView.setImageDrawable(null);
+                } else {
+                    try {
+                        Picasso.with(imageView.getContext()).load(artUrl).into(imageView);
+                    } catch (Exception e) {
+                        imageView.setImageDrawable(null);
+                    }
+                }
+            }
+        }
+    }
+
+
 
     //Album art thumbnail (large (640px for Now Playing screen)
     // and small (200px for list items))

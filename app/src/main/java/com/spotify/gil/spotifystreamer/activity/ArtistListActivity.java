@@ -53,6 +53,16 @@ public class ArtistListActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        final ArtistListFragment fragment = ((ArtistListFragment) getSupportFragmentManager().findFragmentById(R.id.artist_list));
+        if (fragment != null) {
+            fragment.saveInstanceState(outState);
+        }
+    }
+
     /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

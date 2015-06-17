@@ -28,7 +28,6 @@ import java.util.Locale;
 
 public class PlayerFragment extends Fragment {
 
-    public static final String AUTO_PLAY = "auto_play";
     private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("mm:ss", Locale.US);
 
     private SpotifyArtist mArtist;
@@ -104,7 +103,7 @@ public class PlayerFragment extends Fragment {
 
         final Context context = getActivity();
 
-        if (context == null) return;
+        if (context == null || mArtist == null) return;
 
         if (Spotify.isConnected(context)) {
 
@@ -161,7 +160,7 @@ public class PlayerFragment extends Fragment {
         mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
+                if (fromUser && mMediaPlayer.isPlaying()) {
                     mMediaPlayer.seekTo(progress);
                 }
             }
@@ -178,18 +177,23 @@ public class PlayerFragment extends Fragment {
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                mSeekbar.setProgress(0);
-                mSeekbar.setMax(mp.getDuration());
+
                 mDurationTxt.setText(DATE_FORMAT.format(mp.getDuration()));
+                setMediaControlsEnabled(true);
+                mSeekbar.setMax(mp.getDuration());
+
                 mp.start();
-                onPlayStateChanged();
-                mRetryCount = 0;
+
                 final int currentTrackPosition = mArtist.getCurrentTrackPosition();
                 if (currentTrackPosition > 0) {
                     mSeekbar.setProgress(currentTrackPosition);
                     mMediaPlayer.seekTo(currentTrackPosition);
+                } else {
+                    mSeekbar.setProgress(0);
                 }
-                setMediaControlsEnabled(true);
+
+                onPlayStateChanged();
+                mRetryCount = 0;
             }
         });
 
@@ -199,7 +203,7 @@ public class PlayerFragment extends Fragment {
 
                 onPlayStateChanged();
 
-                if (mp.getCurrentPosition() > 0 && mArtist.hasMoreTracks()) {
+                if (mp.getCurrentPosition() > 0 && mArtist != null && mArtist.hasMoreTracks()) {
                     mArtist.nextTrack();
                     onTrackChanged();
                 }
@@ -213,10 +217,12 @@ public class PlayerFragment extends Fragment {
                 setMediaControlsEnabled(false);
                 final int id = v.getId();
 
-                if (id == mNextTrackBtn.getId()) {
-                    mArtist.nextTrack();
-                } else if (id == mPrevTrackBtn.getId()) {
-                    mArtist.prevTrack();
+                if (mArtist != null) {
+                    if (id == mNextTrackBtn.getId()) {
+                        mArtist.nextTrack();
+                    } else if (id == mPrevTrackBtn.getId()) {
+                        mArtist.prevTrack();
+                    }
                 }
 
                 onTrackChanged();
@@ -228,8 +234,8 @@ public class PlayerFragment extends Fragment {
     }
 
     private void setMediaControlsEnabled(final boolean enabled) {
-        mPrevTrackBtn.setEnabled(enabled && mArtist.getCurrentTrackIndex() > 0);
-        mNextTrackBtn.setEnabled(enabled && mArtist.hasMoreTracks());
+        mPrevTrackBtn.setEnabled(mArtist != null && enabled && mArtist.getCurrentTrackIndex() > 0);
+        mNextTrackBtn.setEnabled(mArtist != null && enabled && mArtist.hasMoreTracks());
     }
 
     private void onPlayStateChanged() {
@@ -296,14 +302,22 @@ public class PlayerFragment extends Fragment {
     public void updateProgress() {
         final int progress = mMediaPlayer.getCurrentPosition();
         mSeekbar.setProgress(progress);
-        mArtist.setCurrentTrackPosition(progress);
+        if (mArtist != null) {
+            mArtist.setCurrentTrackPosition(progress);
+        }
         mCurrentTimeTxt.setText(DATE_FORMAT.format(progress));
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBundle(SpotifyArtist.ARTIST_BUNDLE, mArtist.toBundle());
+        if (mArtist != null) {
+            outState.putBundle(SpotifyArtist.ARTIST_BUNDLE, mArtist.toBundle());
+        }
+    }
+
+    public SpotifyArtist getArtist() {
+        return mArtist;
     }
 
     public void setArtist(SpotifyArtist artist) {

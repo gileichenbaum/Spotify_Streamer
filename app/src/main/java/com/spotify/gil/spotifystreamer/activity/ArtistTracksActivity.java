@@ -2,9 +2,9 @@ package com.spotify.gil.spotifystreamer.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.fragment.ArtistTracksFragment;
@@ -13,31 +13,32 @@ import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 
 public class ArtistTracksActivity extends AppCompatActivity implements Callbacks {
 
-    private SpotifyArtist mArtist;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_artist_tracks);
+
+        SpotifyArtist artist = null;
 
         if (savedInstanceState == null) {
             final Intent intent = getIntent();
-            if (intent != null) {
-                mArtist = new SpotifyArtist(intent.getBundleExtra(SpotifyArtist.ARTIST_BUNDLE));
+            if (intent != null && intent.hasExtra(SpotifyArtist.ARTIST_BUNDLE)) {
+                artist = new SpotifyArtist(intent.getBundleExtra(SpotifyArtist.ARTIST_BUNDLE));
+                final ArtistTracksFragment fragment = (ArtistTracksFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_artist);
+                fragment.setData(artist);
             }
-        } else {
-            mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
+        } else if (savedInstanceState.containsKey(SpotifyArtist.ARTIST_BUNDLE)) {
+            artist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
         }
 
-        setContentView(R.layout.activity_artist_tracks);
-
-        final ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setSubtitle(mArtist.getName());
+        if (artist != null) {
+            final ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setDisplayShowHomeEnabled(true);
+                actionBar.setSubtitle(artist.getName());
+            }
         }
-
-        final ArtistTracksFragment fragment = (ArtistTracksFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_artist);
-        fragment.setData(mArtist);
     }
 
     @Override
@@ -50,30 +51,12 @@ public class ArtistTracksActivity extends AppCompatActivity implements Callbacks
     }
 
     @Override
-    public boolean onNavigateUp() {
-        onBackPressed();
-        return true;
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBundle(SpotifyArtist.ARTIST_BUNDLE, mArtist.toBundle());
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
-    }
-
-   /* @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            NavUtils.navigateUpTo(this, new Intent(this, ArtistListActivity.class));
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }*/
+    }
 }

@@ -40,6 +40,10 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         final ListView listView = (ListView) view.findViewById(R.id.list);
+
+        if (mAdapter == null) {
+            mAdapter = new SpotifySongsAdapter(view.getContext(), R.layout.artist_row);
+        }
         listView.setAdapter(mAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -62,12 +66,22 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         refreshTracks();
     }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
+            refreshTracks();
+        }
+    }
+
     private void refreshTracks() {
+
+        if (mArtist == null) return;
 
         mArtist.setOnTracksLoadListener(this);
 
         final List<SpotifyTrack> tracks = mArtist.getTracks();
-
         if (tracks.size() <= 0 && !mArtist.hasLoadingError()) {
             mArtist.loadTracks();
             return;
@@ -76,8 +90,10 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         if (mArtist.hasLoadingError()) {
             checkConnection();
         } else {
-            mAdapter.clear();
-            mAdapter.addAll(tracks);
+            if (mAdapter != null) {
+                mAdapter.clear();
+                mAdapter.addAll(tracks);
+            }
         }
     }
 
@@ -137,7 +153,6 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
             throw new IllegalStateException("Activity must implement fragment's callbacks.");
         }
         mCallbacks = (Callbacks) activity;
-        mAdapter = new SpotifySongsAdapter(activity, R.layout.artist_row);
 
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra(SpotifyArtist.ARTIST_BUNDLE)) {

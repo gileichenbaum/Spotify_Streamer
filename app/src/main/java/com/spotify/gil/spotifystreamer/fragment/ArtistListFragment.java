@@ -231,6 +231,10 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        saveInstanceState(outState);
+    }
+
+    public void saveInstanceState(Bundle outState) {
         if (mActivatedPosition != ListView.INVALID_POSITION) {
             outState.putInt(STATE_ACTIVATED_POSITION, mActivatedPosition);
         }

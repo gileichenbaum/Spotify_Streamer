@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.spotify.gil.spotifystreamer.async.FetchArtistSongsAsyncTask;
-import com.spotify.gil.spotifystreamer.fragment.PlayerFragment;
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
 import java.io.Serializable;
@@ -71,6 +70,8 @@ public class SpotifyArtist implements Serializable {
                 }
             }
         }
+
+        Collections.sort(mTracksList);
     }
 
     public String getName() {
@@ -127,16 +128,8 @@ public class SpotifyArtist implements Serializable {
         final Bundle tracksBundle = new Bundle();
 
         for (int i = 0; i < mTracksList.size(); i++) {
-
             final SpotifyTrack track = mTracksList.get(i);
-
-            final Bundle trackBundle = track.toBundle();
-
-            if (i == mSelectedTrackPosition) {
-                trackBundle.putBoolean(PlayerFragment.AUTO_PLAY, true);
-            }
-
-            tracksBundle.putBundle(track.getTrackName(), trackBundle);
+            tracksBundle.putBundle(track.getTrackName(), track.toBundle());
         }
 
         bundle.putBundle(TRACKS_BUNDLE, tracksBundle);

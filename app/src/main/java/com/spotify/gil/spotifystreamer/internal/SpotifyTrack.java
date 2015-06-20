@@ -112,4 +112,40 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
                 ", mThumbnailUrl='" + mThumbnailUrl + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SpotifyTrack that = (SpotifyTrack) o;
+
+        if (mTrackName != null ? !mTrackName.equals(that.mTrackName) : that.mTrackName != null)
+            return false;
+        if (mArtistName != null ? !mArtistName.equals(that.mArtistName) : that.mArtistName != null)
+            return false;
+        if (mTrackUri != null ? !mTrackUri.equals(that.mTrackUri) : that.mTrackUri != null)
+            return false;
+        if (mAlbumName != null ? !mAlbumName.equals(that.mAlbumName) : that.mAlbumName != null)
+            return false;
+        if (mAlbumArtUri != null ? !mAlbumArtUri.equals(that.mAlbumArtUri) : that.mAlbumArtUri != null)
+            return false;
+        if (!mIndex.equals(that.mIndex)) {
+            return false;
+        }
+        return !(mThumbnailUrl != null ? !mThumbnailUrl.equals(that.mThumbnailUrl) : that.mThumbnailUrl != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mTrackName != null ? mTrackName.hashCode() : 0;
+        result = 31 * result + (mArtistName != null ? mArtistName.hashCode() : 0);
+        result = 31 * result + (mTrackUri != null ? mTrackUri.hashCode() : 0);
+        result = 31 * result + (mAlbumName != null ? mAlbumName.hashCode() : 0);
+        result = 31 * result + (mAlbumArtUri != null ? mAlbumArtUri.hashCode() : 0);
+        result = 31 * result + mIndex;
+        result = 31 * result + (mThumbnailUrl != null ? mThumbnailUrl.hashCode() : 0);
+        return result;
+    }
 }

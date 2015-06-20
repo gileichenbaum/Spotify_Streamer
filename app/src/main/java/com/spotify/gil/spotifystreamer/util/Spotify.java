@@ -1,14 +1,17 @@
 package com.spotify.gil.spotifystreamer.util;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
+import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
 import com.squareup.picasso.Picasso;
 
@@ -65,7 +68,7 @@ public class Spotify {
 
         try {
             final Tracks artistTopTracks = sSpotifyService.getArtistTopTrack(artistID, COUNTRY_OPTIONS);
-            if (artistTopTracks != null && artistTopTracks.tracks != null && artistTopTracks.tracks.size() > 0) {
+            if (artistTopTracks != null && artistTopTracks.tracks != null) {
 
                 final List<SpotifyTrack> tracks = new ArrayList<>(artistTopTracks.tracks.size());
 
@@ -148,7 +151,18 @@ public class Spotify {
         }
     }
 
+    public static SpotifyArtist setupTracksData(final Bundle savedInstanceState, final Intent intent) {
 
+        if (savedInstanceState != null && savedInstanceState.containsKey(SpotifyArtist.ARTIST_BUNDLE)) {
+            return new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
+        } else {
+            if (intent != null && intent.hasExtra(SpotifyArtist.ARTIST_BUNDLE)) {
+                return new SpotifyArtist(intent.getBundleExtra(SpotifyArtist.ARTIST_BUNDLE));
+            }
+        }
+
+        return null;
+    }
 
     //Album art thumbnail (large (640px for Now Playing screen)
     // and small (200px for list items))

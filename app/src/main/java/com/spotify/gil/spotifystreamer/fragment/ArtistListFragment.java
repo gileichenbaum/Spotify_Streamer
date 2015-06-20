@@ -40,7 +40,7 @@ public class ArtistListFragment extends Fragment {
     private int mListChoiceMode;
     private String mSearchString;
 
-    private Callbacks mCallbacks = Callbacks.EMPTY_CALLBACK;
+    private OnArtistSelectedListener mOnArtistSelectedListener = OnArtistSelectedListener.EMPTY;
 
     private ListView mListView;
     private TextView mSearchTextView;
@@ -98,7 +98,7 @@ public class ArtistListFragment extends Fragment {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mCallbacks.onArtistSelected(mArtistAdapter.getItem(position));
+                mOnArtistSelectedListener.onArtistSelected(mArtistAdapter.getItem(position));
             }
         });
 
@@ -216,16 +216,16 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        if (!(activity instanceof Callbacks)) {
-            throw new IllegalStateException("Activity must implement fragment's callbacks.");
+        if (!(activity instanceof OnArtistSelectedListener)) {
+            throw new IllegalStateException("Activity must implement OnArtistSelectedListener.");
         }
-        mCallbacks = (Callbacks) activity;
+        mOnArtistSelectedListener = (OnArtistSelectedListener) activity;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mCallbacks = Callbacks.EMPTY_CALLBACK;
+        mOnArtistSelectedListener = OnArtistSelectedListener.EMPTY;
     }
 
     @Override

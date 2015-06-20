@@ -24,7 +24,7 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
 
     private SpotifyArtist mArtist;
 
-    private Callbacks mCallbacks = Callbacks.EMPTY_CALLBACK;
+    private OnTrackSelectedListener mOnTracksSelectedListener = OnTrackSelectedListener.EMPTY;
     private SpotifySongsAdapter mAdapter;
     private Toast mNoConnectionToast;
 
@@ -33,12 +33,13 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_artist, container);
+        return inflater.inflate(R.layout.fragment_artist, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         final ListView listView = (ListView) view.findViewById(R.id.list);
 
         if (mAdapter == null) {
@@ -50,16 +51,11 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 mArtist.setSelectedTrack(position);
-                mCallbacks.onArtistSelected(mArtist);
+                mOnTracksSelectedListener.onArtistTrackSelected(mArtist);
             }
         });
 
-        if (savedInstanceState == null) {
-            final Bundle args = getArguments();
-            if (args != null && args.containsKey(SpotifyArtist.ARTIST_BUNDLE)) {
-                mArtist = new SpotifyArtist(getArguments().getBundle(SpotifyArtist.ARTIST_BUNDLE));
-            }
-        } else {
+        if (savedInstanceState != null) {
             mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
         }
 
@@ -79,10 +75,14 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
 
         if (mArtist == null) return;
 
-        mArtist.setOnTracksLoadListener(this);
+        if (mArtist.hasNoTracks()) {
+            Toast.makeText(getActivity(), getActivity().getString(R.string.no_tracks_for_artist, mArtist.getName()), Toast.LENGTH_LONG).show();
+            return;
+        }
 
         final List<SpotifyTrack> tracks = mArtist.getTracks();
-        if (tracks.size() <= 0 && !mArtist.hasLoadingError()) {
+        if (tracks.size() <= 0 && !mArtist.hasLoadingError() && !mArtist.hasNoTracks()) {
+            mArtist.setOnTracksLoadListener(this);
             mArtist.loadTracks();
             return;
         }
@@ -117,29 +117,6 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         }
     }
 
-   /* @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_artist, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }*/
-
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -149,10 +126,10 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        if (!(activity instanceof Callbacks)) {
-            throw new IllegalStateException("Activity must implement fragment's callbacks.");
+        if (!(activity instanceof OnTrackSelectedListener)) {
+            throw new IllegalStateException("Activity must implement OnTrackSelectedListener");
         }
-        mCallbacks = (Callbacks) activity;
+        mOnTracksSelectedListener = (OnTrackSelectedListener) activity;
 
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra(SpotifyArtist.ARTIST_BUNDLE)) {
@@ -166,7 +143,7 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         if (mArtist != null) {
             mArtist.setOnTracksLoadListener(null);
         }
-        mCallbacks = Callbacks.EMPTY_CALLBACK;
+        mOnTracksSelectedListener = OnTrackSelectedListener.EMPTY;
     }
 
     @Override

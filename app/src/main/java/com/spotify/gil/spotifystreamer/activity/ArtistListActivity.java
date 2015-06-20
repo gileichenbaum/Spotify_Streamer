@@ -2,25 +2,23 @@ package com.spotify.gil.spotifystreamer.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.fragment.ArtistListFragment;
 import com.spotify.gil.spotifystreamer.fragment.ArtistTracksFragment;
-import com.spotify.gil.spotifystreamer.fragment.Callbacks;
+import com.spotify.gil.spotifystreamer.fragment.OnArtistSelectedListener;
+import com.spotify.gil.spotifystreamer.fragment.OnTrackSelectedListener;
 import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
-import com.spotify.gil.spotifystreamer.util.Spotify;
 
-public class ArtistListActivity extends AppCompatActivity
-        implements Callbacks {
-
-    private boolean mTwoPane;
+public class ArtistListActivity extends PlayerActivityBase implements OnTrackSelectedListener, OnArtistSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Spotify.init();
 
         setContentView(R.layout.activity_artist_search);
 
@@ -29,60 +27,77 @@ public class ArtistListActivity extends AppCompatActivity
             actionBar.setDisplayHomeAsUpEnabled(false);
         }
 
-        if (findViewById(R.id.artist_detail_container) != null) {
-            mTwoPane = true;
+        mTwoPane = findViewById(R.id.artist_detail_container) != null;
+
+        if (mTwoPane) {
             ((ArtistListFragment) getSupportFragmentManager().findFragmentById(R.id.artist_list)).setActivateOnItemClick(true);
         }
+
+        if (mArtist != null) {
+            onArtistSelected(mArtist);
+        }
+    }
+
+    @Override
+    public void onArtistTrackSelected(SpotifyArtist artist) {
+        showPlayer(artist);
     }
 
     @Override
     public void onArtistSelected(SpotifyArtist artist) {
 
-        final Bundle artistBundle = artist.toBundle();
-
         if (mTwoPane) {
             final ArtistTracksFragment fragment = new ArtistTracksFragment();
-            fragment.setArguments(artistBundle);
             getSupportFragmentManager().beginTransaction().replace(R.id.artist_detail_container, fragment).commit();
+            fragment.setData(artist);
         } else {
             final Intent intent = new Intent();
             intent.setClass(this, ArtistTracksActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.putExtra(SpotifyArtist.ARTIST_BUNDLE, artistBundle);
+            intent.putExtra(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
             startActivity(intent);
         }
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        final ArtistListFragment fragment = ((ArtistListFragment) getSupportFragmentManager().findFragmentById(R.id.artist_list));
-        if (fragment != null) {
-            fragment.saveInstanceState(outState);
-        }
+    protected void onDestroy() {
+        super.onDestroy();
+        NotificationManagerCompat.from(this).cancelAll();
     }
 
-    /*
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        mPlayerMenuItem = menu.findItem(R.id.action_player);
+        refreshPlayerMenuItemVisibility();
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (mPlayerMenuItem != null && id == mPlayerMenuItem.getItemId()) {
+            if (mPlayerService == null) {
+                showPlayer(mArtist);
+            } else {
+                showPlayer(mPlayerService.getArtist());
+            }
             return true;
         }
-
         return super.onOptionsItemSelected(item);
-    }*/
+    }
+
+
+    @Override
+    public void supportInvalidateOptionsMenu() {
+        super.supportInvalidateOptionsMenu();
+        refreshPlayerMenuItemVisibility();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        supportInvalidateOptionsMenu();
+    }
 }

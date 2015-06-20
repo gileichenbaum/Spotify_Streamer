@@ -1,9 +1,7 @@
-package com.spotify.gil.spotifystreamer.activity;
+package com.spotify.gil.spotifystreamer.player.service;
 
 import android.os.Handler;
 import android.os.Message;
-
-import com.spotify.gil.spotifystreamer.fragment.PlayerFragment;
 
 import java.lang.ref.WeakReference;
 
@@ -13,18 +11,21 @@ import java.lang.ref.WeakReference;
 public class PlayerHandler extends Handler {
 
     public static final int MSG_UPDATE_SEEKBAR = 1;
-    private final WeakReference<PlayerFragment> mActivityInstance;
+    private final WeakReference<PlayerService> mServiceInstance;
 
-    public PlayerHandler(final PlayerFragment fragment) {
-        mActivityInstance = new WeakReference<>(fragment);
+    public PlayerHandler(final PlayerService fragment) {
+        mServiceInstance = new WeakReference<>(fragment);
     }
 
     @Override
     public void handleMessage(Message msg) {
 
-        final PlayerFragment instance = mActivityInstance.get();
+        final PlayerService instance = mServiceInstance.get();
 
-        if (instance == null) return;
+        if (instance == null) {
+            removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
+            return;
+        }
 
         if (msg.what == MSG_UPDATE_SEEKBAR) {
             instance.updateProgress();

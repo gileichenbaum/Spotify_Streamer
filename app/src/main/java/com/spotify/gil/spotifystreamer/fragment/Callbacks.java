@@ -1,18 +1,36 @@
 package com.spotify.gil.spotifystreamer.fragment;
 
-import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
-
 /**
  * Created by GIL on 14/06/2015.
  */
 public interface Callbacks {
     Callbacks EMPTY_CALLBACK = new Callbacks() {
+
         @Override
-        public void onArtistSelected(SpotifyArtist artist) {
+        public void seekTo(int position) {
+
+        }
+
+        @Override
+        public void nextTrack() {
+        }
+
+        @Override
+        public void prevTrack() {
+        }
+
+        @Override
+        public void togglePlayState() {
         }
     };
 
-    void onArtistSelected(SpotifyArtist artist);
+    void seekTo(int position);
+
+    void nextTrack();
+
+    void prevTrack();
+
+    void togglePlayState();
 }
 
 

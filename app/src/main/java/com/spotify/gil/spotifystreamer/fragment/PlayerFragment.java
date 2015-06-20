@@ -1,11 +1,10 @@
 package com.spotify.gil.spotifystreamer.fragment;
 
-import android.content.Context;
-import android.media.AudioManager;
+import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,45 +12,45 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
-import com.spotify.gil.spotifystreamer.activity.PlayerHandler;
 import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
+import com.spotify.gil.spotifystreamer.player.service.MediaPlayerListener;
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Locale;
 
-public class PlayerFragment extends Fragment {
+public class PlayerFragment extends DialogFragment implements MediaPlayerListener {
 
+    public static final String SHOW_AS_DIALOG = "show_as_dialog";
     private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("mm:ss", Locale.US);
-
-    private SpotifyArtist mArtist;
-    private MediaPlayer mMediaPlayer;
     private ImageButton mPlayButton;
     private SeekBar mSeekbar;
     private TextView mCurrentTimeTxt;
-    private PlayerHandler mHandler;
-    private List<SpotifyTrack> mTracks;
     private ImageView mImageView;
     private TextView mAlbumNameTxt;
     private TextView mArtistNameTxt;
     private TextView mTrackNameTxt;
-    private SpotifyTrack mCurrentTrack;
     private View mPrevTrackBtn;
     private View mNextTrackBtn;
-    private int mRetryCount;
-    private Toast mNoConnectionToast;
     private TextView mDurationTxt;
+    private Callbacks mCallbacks;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        final Bundle args = getArguments();
+        if (args != null) {
+            setShowsDialog(args.getBoolean(SHOW_AS_DIALOG, true));
+        }
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_player, container);
+        return inflater.inflate(R.layout.fragment_player, container, false);
     }
 
     @Override
@@ -71,81 +70,7 @@ public class PlayerFragment extends Fragment {
         mPrevTrackBtn = view.findViewById(R.id.player_btn_fr);
         mNextTrackBtn = view.findViewById(R.id.player_btn_ff);
 
-        init();
-        setupTracksData(savedInstanceState);
-    }
-
-    private void setupTracksData(Bundle savedInstanceState) {
-
-        if (savedInstanceState != null) {
-            mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
-        } else {
-            final Bundle arguments = getArguments();
-            if (arguments != null && arguments.containsKey(SpotifyArtist.ARTIST_BUNDLE)) {
-                mArtist = new SpotifyArtist(arguments.getBundle(SpotifyArtist.ARTIST_BUNDLE));
-            }
-        }
-
-        if (mArtist != null) {
-            mTracks = mArtist.getTracks();
-            onTrackChanged();
-        }
-    }
-
-    private void init() {
-        mHandler = new PlayerHandler(this);
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         initListeners();
-    }
-
-    private void onTrackChanged() {
-
-        final Context context = getActivity();
-
-        if (context == null || mArtist == null) return;
-
-        if (Spotify.isConnected(context)) {
-
-            if (mNoConnectionToast != null) {
-                mNoConnectionToast.cancel();
-            }
-
-            mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
-
-            final SpotifyTrack track = mTracks.get(mArtist.getCurrentTrackIndex());
-
-            if (mCurrentTrack != track) {
-
-                mCurrentTrack = track;
-
-                final String artUrl = track.getArtUrl();
-                Spotify.setupImage(mImageView, artUrl);
-
-                mAlbumNameTxt.setText(track.getAlbumName());
-                mArtistNameTxt.setText(track.getArtistName());
-                mTrackNameTxt.setText(track.getTrackName());
-
-                try {
-                    if (mMediaPlayer.isPlaying()) {
-                        mMediaPlayer.stop();
-                    }
-                    mMediaPlayer.reset();
-                    mMediaPlayer.setDataSource(track.getTrackUri());
-                    mMediaPlayer.prepareAsync();
-
-                } catch (IllegalStateException il) {
-                    if (mRetryCount < 10) {
-                        mRetryCount++;
-                        onTrackChanged();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else {
-            mNoConnectionToast = Spotify.showNotConnected(context);
-        }
     }
 
     private void initListeners() {
@@ -153,15 +78,15 @@ public class PlayerFragment extends Fragment {
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                togglePlayState();
+                mCallbacks.togglePlayState();
             }
         });
 
         mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.seekTo(progress);
+                if (fromUser) {
+                    mCallbacks.seekTo(progress);
                 }
             }
 
@@ -174,88 +99,25 @@ public class PlayerFragment extends Fragment {
             }
         });
 
-        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-
-                mDurationTxt.setText(DATE_FORMAT.format(mp.getDuration()));
-                setMediaControlsEnabled(true);
-                mSeekbar.setMax(mp.getDuration());
-
-                mp.start();
-
-                final int currentTrackPosition = mArtist.getCurrentTrackPosition();
-                if (currentTrackPosition > 0) {
-                    mSeekbar.setProgress(currentTrackPosition);
-                    mMediaPlayer.seekTo(currentTrackPosition);
-                } else {
-                    mSeekbar.setProgress(0);
-                }
-
-                onPlayStateChanged();
-                mRetryCount = 0;
-            }
-        });
-
-        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-
-                onPlayStateChanged();
-
-                if (mp.getCurrentPosition() > 0 && mArtist != null && mArtist.hasMoreTracks()) {
-                    mArtist.nextTrack();
-                    onTrackChanged();
-                }
-            }
-        });
-
         final View.OnClickListener trackChangeClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                setMediaControlsEnabled(false);
+                mNextTrackBtn.setEnabled(false);
+                mPrevTrackBtn.setEnabled(false);
+
                 final int id = v.getId();
 
-                if (mArtist != null) {
-                    if (id == mNextTrackBtn.getId()) {
-                        mArtist.nextTrack();
-                    } else if (id == mPrevTrackBtn.getId()) {
-                        mArtist.prevTrack();
-                    }
+                if (id == mNextTrackBtn.getId()) {
+                    mCallbacks.nextTrack();
+                } else if (id == mPrevTrackBtn.getId()) {
+                    mCallbacks.prevTrack();
                 }
-
-                onTrackChanged();
             }
         };
 
         mPrevTrackBtn.setOnClickListener(trackChangeClickListener);
         mNextTrackBtn.setOnClickListener(trackChangeClickListener);
-    }
-
-    private void setMediaControlsEnabled(final boolean enabled) {
-        mPrevTrackBtn.setEnabled(mArtist != null && enabled && mArtist.getCurrentTrackIndex() > 0);
-        mNextTrackBtn.setEnabled(mArtist != null && enabled && mArtist.hasMoreTracks());
-    }
-
-    private void onPlayStateChanged() {
-        if (mMediaPlayer.isPlaying()) {
-            mPlayButton.setImageResource(R.drawable.ic_pause_black_48dp);
-            mHandler.handleMessage(mHandler.obtainMessage(PlayerHandler.MSG_UPDATE_SEEKBAR));
-        } else {
-            mPlayButton.setImageResource(R.drawable.ic_play_arrow_black_48dp);
-            mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
-            updateProgress();
-        }
-    }
-
-    private void togglePlayState() {
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
-        } else {
-            mMediaPlayer.start();
-        }
-        onPlayStateChanged();
     }
 
   /*  @Override
@@ -280,49 +142,62 @@ public class PlayerFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }*/
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
+    private void updateProgress(final MediaPlayer mp) {
+        if (mp == null) {
+            mSeekbar.setProgress(0);
+            mCurrentTimeTxt.setText(null);
+        } else {
+            final int progress = mp.getCurrentPosition();
+            mSeekbar.setProgress(progress);
+            mCurrentTimeTxt.setText(DATE_FORMAT.format(progress));
         }
-        mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
-    }
-
-    public void updateProgress() {
-        final int progress = mMediaPlayer.getCurrentPosition();
-        mSeekbar.setProgress(progress);
-        if (mArtist != null) {
-            mArtist.setCurrentTrackPosition(progress);
-        }
-        mCurrentTimeTxt.setText(DATE_FORMAT.format(progress));
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mArtist != null) {
-            outState.putBundle(SpotifyArtist.ARTIST_BUNDLE, mArtist.toBundle());
+    public void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track) {
+        if (mp != null && mp.isPlaying()) {
+            mPlayButton.setImageResource(R.drawable.ic_pause_black_48dp);
+        } else {
+            mPlayButton.setImageResource(R.drawable.ic_play_arrow_black_48dp);
         }
+        updateProgress(mp);
     }
 
-    public SpotifyArtist getArtist() {
-        return mArtist;
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        return false;
     }
 
-    public void setArtist(SpotifyArtist artist) {
-        mArtist = artist;
-        mTracks = mArtist.getTracks();
-        onTrackChanged();
+    @Override
+    public void onPrepared(MediaPlayer mp, SpotifyTrack track, SpotifyArtist artist) {
+
+        mPrevTrackBtn.setEnabled(artist != null && artist.getCurrentTrackIndex() > 0);
+        mNextTrackBtn.setEnabled(artist != null && artist.hasMoreTracks());
+
+        mDurationTxt.setText(DATE_FORMAT.format(mp.getDuration()));
+        mSeekbar.setMax(mp.getDuration());
+
+        final String artUrl = track.getArtUrl();
+        Spotify.setupImage(mImageView, artUrl);
+
+        mAlbumNameTxt.setText(track.getAlbumName());
+        mArtistNameTxt.setText(track.getArtistName());
+        mTrackNameTxt.setText(track.getTrackName());
+    }
+
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (!(activity instanceof Callbacks)) {
+            throw new IllegalStateException("Activity must implement fragment's callbacks.");
+        }
+        mCallbacks = (Callbacks) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = Callbacks.EMPTY_CALLBACK;
     }
 }

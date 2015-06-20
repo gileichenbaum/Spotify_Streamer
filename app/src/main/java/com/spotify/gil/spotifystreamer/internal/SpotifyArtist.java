@@ -20,11 +20,13 @@ import kaaes.spotify.webapi.android.models.Image;
  */
 public class SpotifyArtist implements Serializable {
 
+    public static final String ARTIST_BUNDLE = "artist_bundle";
+
     public final static String ID = "artist_id";
     public final static String NAME = "artist_name";
     public final static String IMAGE_URL = "artist_image_url";
     public final static String TRACKS_BUNDLE = "track_bundle";
-    public static final String ARTIST_BUNDLE = "artist_bundle";
+    public static final String HAS_NO_TRACKS = "has_no_tracks";
     public static final String SELECTED_TRACK_POSITION = "track_position";
     public static final String SELECTED_TRACK_INDEX = "track_index";
 
@@ -32,12 +34,12 @@ public class SpotifyArtist implements Serializable {
     private final String mImageUrl;
     private final String mSpotifyId;
     private final ArrayList<SpotifyTrack> mTracksList = new ArrayList<>();
-    private int mSelectedTrackIndex;
+    private int mSelectedTrackIndex = -1;
     private int mSelectedTrackPosition;
     private boolean mErrorLoadingTracks;
     private OnTracksLoadListener mOnTracksLoadListener;
     private FetchArtistSongsAsyncTask mTrackLoadingTask;
-
+    private boolean mHasNoTracks;
 
     public SpotifyArtist(Artist artist) {
 
@@ -60,6 +62,7 @@ public class SpotifyArtist implements Serializable {
         mImageUrl = bundle.getString(IMAGE_URL);
         mSelectedTrackPosition = bundle.getInt(SELECTED_TRACK_POSITION);
         mSelectedTrackIndex = bundle.getInt(SELECTED_TRACK_INDEX);
+        mHasNoTracks = bundle.getBoolean(HAS_NO_TRACKS);
 
         final Bundle tracksBundle = bundle.getBundle(TRACKS_BUNDLE);
 
@@ -99,6 +102,8 @@ public class SpotifyArtist implements Serializable {
 
                     if (spotifyTracks == null) {
                         mErrorLoadingTracks = true;
+                    } else if (spotifyTracks.size() <= 0) {
+                        mHasNoTracks = true;
                     } else {
                         mTracksList.addAll(spotifyTracks);
                         Collections.sort(mTracksList);
@@ -124,6 +129,7 @@ public class SpotifyArtist implements Serializable {
         bundle.putString(IMAGE_URL, mImageUrl);
         bundle.putInt(SELECTED_TRACK_POSITION, mSelectedTrackPosition);
         bundle.putInt(SELECTED_TRACK_INDEX, mSelectedTrackIndex);
+        bundle.putBoolean(HAS_NO_TRACKS, mHasNoTracks);
 
         final Bundle tracksBundle = new Bundle();
 
@@ -206,6 +212,10 @@ public class SpotifyArtist implements Serializable {
         result = 31 * result + mSelectedTrackPosition;
         result = 31 * result + (mErrorLoadingTracks ? 1 : 0);
         return result;
+    }
+
+    public boolean hasNoTracks() {
+        return mHasNoTracks;
     }
 
     public interface OnTracksLoadListener {

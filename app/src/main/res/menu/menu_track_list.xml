@@ -1,15 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ArtistListActivity">
-
-    <item
-        android:id="@+id/action_player"
-        android:icon="@drawable/ic_play_arrow_black_48dp"
-        android:orderInCategory="1"
-        android:title="@string/title_activity_player"
-        app:showAsAction="ifRoom" />
-
+    tools:context=".ArtistTracksActivity">
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

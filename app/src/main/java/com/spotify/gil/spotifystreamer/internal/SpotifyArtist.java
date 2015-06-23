@@ -1,5 +1,6 @@
 package com.spotify.gil.spotifystreamer.internal;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -160,10 +161,6 @@ public class SpotifyArtist implements Serializable {
         return mSelectedTrackIndex;
     }
 
-    public int getCurrentTrackPosition() {
-        return mSelectedTrackPosition;
-    }
-
     public void setCurrentTrackPosition(int currentTrackPosition) {
         mSelectedTrackPosition = currentTrackPosition;
     }
@@ -216,6 +213,19 @@ public class SpotifyArtist implements Serializable {
 
     public boolean hasNoTracks() {
         return mHasNoTracks;
+    }
+
+    public Intent getShareIntent() {
+
+        if (mTracksList.size() > 0 && mSelectedTrackIndex > -1) {
+            final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            final SpotifyTrack spotifyTrack = mTracksList.get(mSelectedTrackIndex);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, String.format("Check out %s by %s\r\n%s", spotifyTrack.getTrackName(), spotifyTrack.getArtistName(), spotifyTrack.getExternaUrl()));
+            return shareIntent;
+        }
+
+        return null;
     }
 
     public interface OnTracksLoadListener {

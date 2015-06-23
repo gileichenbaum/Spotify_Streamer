@@ -83,34 +83,34 @@
         android:id="@+id/player_control_panel"
         android:layout_width="match_parent"
         android:layout_height="65dp"
+        android:layout_below="@+id/player_main_panel"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/player_main_panel"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/player_btn_fr"
             android:layout_width="65dp"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_fast_rewind_black_48dp"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true" />
+            android:layout_alignParentTop="true"
+            android:src="@drawable/ic_prev_track" />
 
         <ImageButton
             android:id="@+id/player_btn_play"
             android:layout_width="65dp"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_play_arrow_black_48dp"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_play" />
 
         <ImageButton
             android:id="@+id/player_btn_ff"
             android:layout_width="65dp"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_fast_forward_black_48dp"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
+            android:src="@drawable/ic_next_track" />
     </RelativeLayout>
 
 </LinearLayout>

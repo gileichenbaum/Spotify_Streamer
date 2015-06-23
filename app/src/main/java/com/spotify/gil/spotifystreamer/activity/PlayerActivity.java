@@ -2,7 +2,6 @@ package com.spotify.gil.spotifystreamer.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.spotify.gil.spotifystreamer.R;
@@ -36,12 +35,6 @@ public class PlayerActivity extends PlayerActivityBase {
         mPlayerFragment.setArguments(b);
         mPlayerFragment.setShowsDialog(false);
         getSupportFragmentManager().beginTransaction().replace(R.id.player_container, mPlayerFragment, PlayerActivityBase.PLAYER_FRAGMENT_TAG).commit();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_track_list, menu);
-        return true;
     }
 
     @Override

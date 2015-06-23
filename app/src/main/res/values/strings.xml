@@ -9,4 +9,5 @@
     <string name="no_connection">We can\'t connect to the internet.\r\nPlease check your connection and try again.</string>
     <string name="no_tracks_for_artist">Oops, we can\'t find tracks for %1$s</string>
     <string name="playing_now">\u25BA Playing now</string>
+    <string name="share">Share</string>
 </resources>

@@ -19,6 +19,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     public final static String ALBUM_ART_URI = "art_uri";
     public final static String ALBUM_THUMBNAIL_URI = "art_thumbnail_uri";
     public final static String TRACK_NAME = "track_name";
+    public final static String EXTERNAL_URL = "external_ur;";
     public static final String INDEX = "index";
     private final String mTrackName;
     private final String mArtistName;
@@ -27,11 +28,14 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
     private final String mAlbumArtUri;
     private final Integer mIndex;
     private final String mThumbnailUrl;
+    private final String mExternalUrl;
 
     public SpotifyTrack(final int index, Track track) {
 
         mIndex = index;
         mTrackName = track.name;
+
+        mExternalUrl = track.external_urls == null ? null : track.external_urls.get("spotify");
 
         if (track.artists.size() == 1) {
             mArtistName = track.artists.get(0).name;
@@ -56,6 +60,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
         mAlbumArtUri = bundle.getString(ALBUM_ART_URI);
         mIndex = bundle.getInt(INDEX);
         mThumbnailUrl = bundle.getString(ALBUM_THUMBNAIL_URI);
+        mExternalUrl = bundle.getString(EXTERNAL_URL);
     }
 
     public Bundle toBundle() {
@@ -68,6 +73,7 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
         bundle.putString(ALBUM_ART_URI, mAlbumArtUri);
         bundle.putString(ALBUM_THUMBNAIL_URI, mThumbnailUrl);
         bundle.putInt(INDEX, mIndex);
+        bundle.putString(EXTERNAL_URL, mExternalUrl);
         return bundle;
     }
 
@@ -93,6 +99,10 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
 
     public String getThumbnailUrl() {
         return mThumbnailUrl;
+    }
+
+    public String getExternaUrl() {
+        return mExternalUrl;
     }
 
     @Override

@@ -7,9 +7,13 @@ import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
+import android.view.Menu;
 import android.view.MenuItem;
 
+import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.fragment.ArtistTracksFragment;
 import com.spotify.gil.spotifystreamer.fragment.Callbacks;
 import com.spotify.gil.spotifystreamer.fragment.PlayerFragment;
@@ -33,6 +37,8 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
     protected PlayerService mPlayerService;
     protected SpotifyArtist mArtist;
     protected MenuItem mPlayerMenuItem;
+    protected ShareActionProvider mShareActionProvider;
+    private MenuItem mShareItem;
     private boolean mServiceConnected;
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -49,6 +55,7 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
             mPlayerService = null;
         }
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,5 +158,32 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
                 }
             }
         }
+
+        if (mShareItem != null) {
+            final Intent shareIntent = mArtist == null ? null : mArtist.getShareIntent();
+            final boolean sharingEnabled = mShareActionProvider != null && shareIntent != null;
+            mShareItem.setVisible(sharingEnabled);
+            if (sharingEnabled) {
+                mShareActionProvider.setShareIntent(shareIntent);
+            }
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        mPlayerMenuItem = menu.findItem(R.id.action_player);
+        mShareItem = menu.findItem(R.id.menu_item_share);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mShareItem);
+        refreshPlayerMenuItemVisibility();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void supportInvalidateOptionsMenu() {
+        super.supportInvalidateOptionsMenu();
+        refreshPlayerMenuItemVisibility();
     }
 }

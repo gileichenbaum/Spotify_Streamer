@@ -3,7 +3,6 @@ package com.spotify.gil.spotifystreamer.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.spotify.gil.spotifystreamer.R;
@@ -43,14 +42,6 @@ public class ArtistTracksActivity extends PlayerActivityBase implements OnTrackS
         playerIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         playerIntent.putExtra(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
         startActivity(playerIntent);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        mPlayerMenuItem = menu.findItem(R.id.action_player);
-        refreshPlayerMenuItemVisibility();
-        return true;
     }
 
     @Override

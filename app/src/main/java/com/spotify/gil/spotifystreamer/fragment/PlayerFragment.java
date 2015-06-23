@@ -147,9 +147,9 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
         }
 
         if (mp != null && mp.isPlaying()) {
-            mPlayButton.setImageResource(R.drawable.ic_pause_black_48dp);
+            mPlayButton.setImageResource(R.drawable.ic_pause);
         } else {
-            mPlayButton.setImageResource(R.drawable.ic_play_arrow_black_48dp);
+            mPlayButton.setImageResource(R.drawable.ic_play);
         }
         updateProgress(mp);
     }

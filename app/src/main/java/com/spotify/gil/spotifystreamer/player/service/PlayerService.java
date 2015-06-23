@@ -194,22 +194,22 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         builder.setContentIntent(pendingIntent);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setShowWhen(false);
-        //.setOngoing(MediaPlayerState == PlaybackStateCompat.STATE_PLAYING);
+        builder.setOngoing(isPlaying());
 
-        final boolean hasPrevTrack = mArtist.getCurrentTrackIndex() > 0;
-        if (hasPrevTrack) {
+        if (mArtist.getCurrentTrackIndex() > 0) {
             builder.addAction(generateAction(R.drawable.ic_rewind_white_24dp, "prev", ACTION_PREVIOUS));
+        } else {
+            builder.addAction(generateAction(R.drawable.ic_rewind_grey600_24dp, "prev", ACTION_PREVIOUS));
         }
         addPlayPauseAction(builder);
-        final boolean hasNextTrack = mArtist.hasMoreTracks();
-        if (hasNextTrack) {
+
+        if (mArtist.hasMoreTracks()) {
             builder.addAction(generateAction(R.drawable.ic_fast_forward_white_24dp, "next", ACTION_NEXT));
-        }
-        if (hasNextTrack && hasPrevTrack) {
-            style.setShowActionsInCompactView(0, 1, 2);
         } else {
-            style.setShowActionsInCompactView(0, 1);
+            builder.addAction(generateAction(R.drawable.ic_fast_forward_grey600_24dp, "next", ACTION_NEXT));
         }
+
+        style.setShowActionsInCompactView(0, 1, 2);
 
         if (mBitmap != null) {
             builder.setLargeIcon(mBitmap);

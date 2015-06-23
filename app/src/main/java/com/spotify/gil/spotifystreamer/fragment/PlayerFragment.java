@@ -37,6 +37,7 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
     private View mNextTrackBtn;
     private TextView mDurationTxt;
     private Callbacks mCallbacks;
+    private SpotifyArtist mArtist;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,6 +70,10 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
         mPlayButton = (ImageButton) view.findViewById(R.id.player_btn_play);
         mPrevTrackBtn = view.findViewById(R.id.player_btn_fr);
         mNextTrackBtn = view.findViewById(R.id.player_btn_ff);
+
+        mPrevTrackBtn.setEnabled(false);
+        mNextTrackBtn.setEnabled(false);
+        mPlayButton.setEnabled(false);
 
         initListeners();
     }
@@ -120,28 +125,6 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
         mNextTrackBtn.setOnClickListener(trackChangeClickListener);
     }
 
-  /*  @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_player, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }*/
-
     private void updateProgress(final MediaPlayer mp) {
         if (mp == null) {
             mSeekbar.setProgress(0);
@@ -154,7 +137,15 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
     }
 
     @Override
-    public void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track) {
+    public void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track, SpotifyArtist artist) {
+
+        if (mPlayButton == null) return;
+
+        if (mArtist == null || !mArtist.equals(artist)) {
+            mArtist = artist;
+            onPrepared(mp, track, artist);
+        }
+
         if (mp != null && mp.isPlaying()) {
             mPlayButton.setImageResource(R.drawable.ic_pause_black_48dp);
         } else {
@@ -171,8 +162,11 @@ public class PlayerFragment extends DialogFragment implements MediaPlayerListene
     @Override
     public void onPrepared(MediaPlayer mp, SpotifyTrack track, SpotifyArtist artist) {
 
+        if (mPlayButton == null) return;
+
         mPrevTrackBtn.setEnabled(artist != null && artist.getCurrentTrackIndex() > 0);
         mNextTrackBtn.setEnabled(artist != null && artist.hasMoreTracks());
+        mPlayButton.setEnabled(true);
 
         mDurationTxt.setText(DATE_FORMAT.format(mp.getDuration()));
         mSeekbar.setMax(mp.getDuration());

@@ -11,12 +11,15 @@
     <EditText
         android:id="@+id/mainpage_txt_search"
         android:layout_width="match_parent"
-        android:hint="@string/search_text_hint"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:hint="@string/search_text_hint" />
 
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:cacheColorHint="@android:color/transparent"
+        android:choiceMode="singleChoice"
+        android:drawSelectorOnTop="false" />
 </LinearLayout>

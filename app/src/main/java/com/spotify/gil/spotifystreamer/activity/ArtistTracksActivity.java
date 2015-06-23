@@ -3,7 +3,6 @@ package com.spotify.gil.spotifystreamer.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -13,7 +12,7 @@ import com.spotify.gil.spotifystreamer.fragment.OnTrackSelectedListener;
 import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
-public class ArtistTracksActivity extends AppCompatActivity implements OnTrackSelectedListener {
+public class ArtistTracksActivity extends PlayerActivityBase implements OnTrackSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,17 +47,22 @@ public class ArtistTracksActivity extends AppCompatActivity implements OnTrackSe
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_track_list, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        mPlayerMenuItem = menu.findItem(R.id.action_player);
+        refreshPlayerMenuItemVisibility();
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            finish();
+        if (mPlayerMenuItem != null && id == mPlayerMenuItem.getItemId()) {
+            if (mPlayerService != null) {
+                onArtistTrackSelected(mPlayerService.getArtist());
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

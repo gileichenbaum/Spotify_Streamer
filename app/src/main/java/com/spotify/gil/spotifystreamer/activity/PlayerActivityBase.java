@@ -10,7 +10,7 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.spotify.gil.spotifystreamer.R;
+import com.spotify.gil.spotifystreamer.fragment.ArtistTracksFragment;
 import com.spotify.gil.spotifystreamer.fragment.Callbacks;
 import com.spotify.gil.spotifystreamer.fragment.PlayerFragment;
 import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
@@ -19,13 +19,18 @@ import com.spotify.gil.spotifystreamer.player.service.MediaPlayerListener;
 import com.spotify.gil.spotifystreamer.player.service.PlayerService;
 import com.spotify.gil.spotifystreamer.util.Spotify;
 
+import static com.spotify.gil.spotifystreamer.util.Spotify.setupTracksData;
+
 /**
  * Created by GIL on 20/06/2015 for Spotify Streamer.
  */
 public abstract class PlayerActivityBase extends AppCompatActivity implements Callbacks, MediaPlayerListener {
-    protected PlayerService mPlayerService;
+
+    protected final static String PLAYER_FRAGMENT_TAG = "player_fragment";
+
+    protected ArtistTracksFragment mArtistTracksFragment;
     protected PlayerFragment mPlayerFragment;
-    protected boolean mTwoPane;
+    protected PlayerService mPlayerService;
     protected SpotifyArtist mArtist;
     protected MenuItem mPlayerMenuItem;
     private boolean mServiceConnected;
@@ -50,10 +55,10 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
         super.onCreate(savedInstanceState);
         Spotify.init();
         initPlayerService();
-        mArtist = Spotify.setupTracksData(savedInstanceState, getIntent());
+        mArtist = setupTracksData(savedInstanceState, getIntent());
     }
 
-    private void initPlayerService() {
+    protected void initPlayerService() {
         if (!mServiceConnected || mPlayerService == null) {
             final Context applicationContext = getApplicationContext();
             final Intent intent = new Intent(applicationContext, PlayerService.class);
@@ -62,38 +67,15 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
         }
     }
 
-    protected void showPlayer(SpotifyArtist artist) {
-
-        mPlayerFragment = (PlayerFragment) getSupportFragmentManager().findFragmentByTag(PlayerFragment.class.getSimpleName());
-
-        if (mPlayerFragment != null) {
-            return;
-        } else if (!mTwoPane && findViewById(R.id.player_container) == null) {
-            final Intent playerIntent = new Intent();
-            playerIntent.setClass(this, PlayerActivity.class);
-            if (artist != null) {
-                playerIntent.putExtra(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
-            }
-            startActivity(playerIntent);
-            return;
+    protected void setupServiceListener(PlayerService service) {
+        mPlayerService = service;
+        service.setMediaListener(this);
+        if (mArtist != null && mArtist.getTracks() != null && mArtist.getCurrentTrackIndex() > -1) {
+            mPlayerService.setArtist(mArtist);
+        } else if (mPlayerService != null && mPlayerService.getArtist() != null) {
+            service.onConnected();
         }
-
-        if (mPlayerFragment == null) {
-            mPlayerFragment = new PlayerFragment();
-            final Bundle b = new Bundle();
-            b.putBoolean(PlayerFragment.SHOW_AS_DIALOG, mTwoPane);
-            if (artist != null) {
-                b.putBundle(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
-            }
-            mPlayerFragment.setArguments(b);
-            mPlayerFragment.setShowsDialog(mTwoPane);
-        }
-
-        if (mTwoPane) {
-            mPlayerFragment.show(getSupportFragmentManager(), "tablet_player");
-        } else {
-            getSupportFragmentManager().beginTransaction().replace(R.id.player_container, mPlayerFragment, PlayerFragment.class.getSimpleName()).commit();
-        }
+        refreshPlayerMenuItemVisibility();
     }
 
     @Override
@@ -124,21 +106,11 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
         }
     }
 
-    private void setupServiceListener(PlayerService service) {
-        mPlayerService = service;
-        service.setMediaListener(this);
-        if (mArtist != null && mArtist.getTracks() != null && mArtist.getCurrentTrackIndex() > -1) {
-            mPlayerService.setArtist(mArtist);
-        } else if (mPlayerService != null && mPlayerService.getArtist() != null) {
-            service.onConnected();
-        }
-        refreshPlayerMenuItemVisibility();
-    }
-
     @Override
-    public void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track) {
+    public void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track, SpotifyArtist artist) {
+        mArtist = artist;
         if (mPlayerFragment != null) {
-            mPlayerFragment.onPlayStateChanged(mp, track);
+            mPlayerFragment.onPlayStateChanged(mp, track, artist);
         }
         refreshPlayerMenuItemVisibility();
     }
@@ -153,6 +125,9 @@ public abstract class PlayerActivityBase extends AppCompatActivity implements Ca
     public void onPrepared(MediaPlayer mp, SpotifyTrack track, SpotifyArtist artist) {
         if (mPlayerFragment != null) {
             mPlayerFragment.onPrepared(mp, track, artist);
+        }
+        if (mArtistTracksFragment != null) {
+            mArtistTracksFragment.setTrack(track);
         }
         refreshPlayerMenuItemVisibility();
     }

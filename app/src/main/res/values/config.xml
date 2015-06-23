@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="main_window_master_view_weight">2</integer>
+    <integer name="main_window_detail_view_weight">3</integer>
+</resources>

@@ -39,6 +39,16 @@ public class SpotifySongsAdapter extends ArrayAdapter<SpotifyTrack> {
         return convertView;
     }
 
+    @Override
+    public boolean hasStableIds() {
+        return true;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
     private class SongRowItemHolder {
         private final ImageView mImageView;
         private final TextView mSongNameTextView;

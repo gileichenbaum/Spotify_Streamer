@@ -10,7 +10,7 @@ import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
  */
 public interface MediaPlayerListener {
 
-    void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track);
+    void onPlayStateChanged(MediaPlayer mp, SpotifyTrack track, SpotifyArtist mArtist);
 
     boolean onError(MediaPlayer mp, int what, int extra);
 

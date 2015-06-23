@@ -190,16 +190,26 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         builder.setContentText(mArtist.getName());
         builder.setDeleteIntent(stopIntent);
         builder.setContentInfo(mCurrentTrack.getAlbumName());
-        builder.setSmallIcon(R.drawable.ic_play_arrow_black_48dp);
+        builder.setSmallIcon(R.drawable.ic_play_white_24dp);
         builder.setContentIntent(pendingIntent);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setShowWhen(false);
         //.setOngoing(MediaPlayerState == PlaybackStateCompat.STATE_PLAYING);
 
-        builder.addAction(generateAction(R.drawable.ic_fast_rewind_black_48dp, "prev", ACTION_PREVIOUS));
+        final boolean hasPrevTrack = mArtist.getCurrentTrackIndex() > 0;
+        if (hasPrevTrack) {
+            builder.addAction(generateAction(R.drawable.ic_rewind_white_24dp, "prev", ACTION_PREVIOUS));
+        }
         addPlayPauseAction(builder);
-        builder.addAction(generateAction(R.drawable.ic_fast_forward_black_48dp, "next", ACTION_NEXT));
-        style.setShowActionsInCompactView(0, 1, 2);
+        final boolean hasNextTrack = mArtist.hasMoreTracks();
+        if (hasNextTrack) {
+            builder.addAction(generateAction(R.drawable.ic_fast_forward_white_24dp, "next", ACTION_NEXT));
+        }
+        if (hasNextTrack && hasPrevTrack) {
+            style.setShowActionsInCompactView(0, 1, 2);
+        } else {
+            style.setShowActionsInCompactView(0, 1);
+        }
 
         if (mBitmap != null) {
             builder.setLargeIcon(mBitmap);
@@ -208,7 +218,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         NotificationManagerCompat.from(getApplicationContext()).notify("player", 0, builder.build());
 
         if (mMediaPlayerListener != null) {
-            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack);
+            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack, mArtist);
         }
 
         if (mMediaPlayer.isPlaying()) {
@@ -220,9 +230,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     private void addPlayPauseAction(NotificationCompat.Builder builder) {
         if (mMediaPlayer.isPlaying()) {
-            builder.addAction(generateAction(R.drawable.ic_pause_black_48dp, "Pause", ACTION_PAUSE));
+            builder.addAction(generateAction(R.drawable.ic_pause_white_24dp, "Pause", ACTION_PAUSE));
         } else {
-            builder.addAction(generateAction(R.drawable.ic_play_arrow_black_48dp, "Play", ACTION_PLAY));
+            builder.addAction(generateAction(R.drawable.ic_play_white_24dp, "Play", ACTION_PLAY));
         }
     }
 
@@ -275,7 +285,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         mHandler.removeMessages(PlayerHandler.MSG_UPDATE_SEEKBAR);
 
         if (mMediaPlayerListener != null) {
-            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack);
+            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack, mArtist);
         }
 
         if (mp.getCurrentPosition() > 0) {
@@ -326,7 +336,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 return;
             }
 
-            if (track.equals(mCurrentTrack)) {
+            if (track.equals(mCurrentTrack) && isPlaying()) {
                 if (mMediaPlayerListener != null) {
                     mMediaPlayerListener.onPrepared(mMediaPlayer, mCurrentTrack, mArtist);
                 }
@@ -378,7 +388,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public void seekTo(int progress) {
-        mController.getTransportControls().seekTo(progress);
+        if (mController != null) {
+            mController.getTransportControls().seekTo(progress);
+        }
     }
 
     public void setMediaListener(MediaPlayerListener listener) {
@@ -386,25 +398,36 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public void nextTrack() {
-        mController.getTransportControls().skipToNext();
+        if (mController != null) {
+            mController.getTransportControls().skipToNext();
+        }
     }
 
     public void prevTrack() {
-        mController.getTransportControls().skipToPrevious();
+
+        if (mController != null) {
+            mController.getTransportControls().skipToPrevious();
+        }
     }
 
     public void pause() {
-        mController.getTransportControls().pause();
+
+        if (mController != null) {
+            mController.getTransportControls().pause();
+        }
     }
 
     public void start() {
-        mController.getTransportControls().play();
+
+        if (mController != null) {
+            mController.getTransportControls().play();
+        }
     }
 
     public void updateProgress() {
         mArtist.setCurrentTrackPosition(mMediaPlayer.getCurrentPosition());
         if (mMediaPlayerListener != null) {
-            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack);
+            mMediaPlayerListener.onPlayStateChanged(mMediaPlayer, mCurrentTrack, mArtist);
         }
     }
 

@@ -3,6 +3,7 @@ package com.spotify.gil.spotifystreamer.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -30,6 +31,8 @@ import java.util.LinkedList;
 import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 
+import static com.spotify.gil.spotifystreamer.fragment.OnArtistSelectedListener.EMPTY;
+
 public class ArtistListFragment extends Fragment {
 
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
@@ -37,10 +40,9 @@ public class ArtistListFragment extends Fragment {
     private static final String ARTIST_LIST = "artist_list";
 
     private int mActivatedPosition = ListView.INVALID_POSITION;
-    private int mListChoiceMode;
     private String mSearchString;
 
-    private OnArtistSelectedListener mOnArtistSelectedListener = OnArtistSelectedListener.EMPTY;
+    private OnArtistSelectedListener mOnArtistSelectedListener = EMPTY;
 
     private ListView mListView;
     private TextView mSearchTextView;
@@ -90,7 +92,6 @@ public class ArtistListFragment extends Fragment {
         mSearchTextView = (TextView) view.findViewById(R.id.mainpage_txt_search);
 
         mListView = (ListView) view.findViewById(R.id.list);
-        mListView.setChoiceMode(mListChoiceMode);
         if (mArtistAdapter == null) {
             mArtistAdapter = new SpotifyArtistAdapter(view.getContext(), R.layout.artist_row);
         }
@@ -144,7 +145,14 @@ public class ArtistListFragment extends Fragment {
                         artists.add(Integer.parseInt(key), new SpotifyArtist(list.getBundle(key)));
                     }
 
-                    mArtistAdapter.addAll(artists);
+                    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        mArtistAdapter.addAll(artists);
+                    } else {
+                        for (SpotifyArtist artist :
+                                artists) {
+                            mArtistAdapter.add(artist);
+                        }
+                    }
                 }
             }
 
@@ -225,16 +233,12 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mOnArtistSelectedListener = OnArtistSelectedListener.EMPTY;
+        mOnArtistSelectedListener = EMPTY;
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        saveInstanceState(outState);
-    }
-
-    public void saveInstanceState(Bundle outState) {
         if (mActivatedPosition != ListView.INVALID_POSITION) {
             outState.putInt(STATE_ACTIVATED_POSITION, mActivatedPosition);
         }
@@ -250,13 +254,6 @@ public class ArtistListFragment extends Fragment {
         }
 
         outState.putBundle(ARTIST_LIST, list);
-    }
-
-    public void setActivateOnItemClick(boolean activateOnItemClick) {
-        mListChoiceMode = activateOnItemClick ? ListView.CHOICE_MODE_SINGLE : ListView.CHOICE_MODE_NONE;
-        if (mListView != null) {
-            mListView.setChoiceMode(mListChoiceMode);
-        }
     }
 
     private void setActivatedPosition(int position) {

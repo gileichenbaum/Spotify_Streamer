@@ -3,8 +3,10 @@ package com.spotify.gil.spotifystreamer.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +24,16 @@ import java.util.List;
 
 public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTracksLoadListener {
 
+    private static final String STATE_ACTIVATED_POSITION = "activated_position";
+    private static final String TAG = "ArtistTracksFragment";
+
     private SpotifyArtist mArtist;
 
     private OnTrackSelectedListener mOnTracksSelectedListener = OnTrackSelectedListener.EMPTY;
     private SpotifySongsAdapter mAdapter;
     private Toast mNoConnectionToast;
+    private ListView mListView;
+    private int mSelectedIndex = ListView.INVALID_POSITION;
 
     public ArtistTracksFragment() {
     }
@@ -40,16 +47,19 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final ListView listView = (ListView) view.findViewById(R.id.list);
+        mListView = (ListView) view.findViewById(R.id.list);
 
         if (mAdapter == null) {
             mAdapter = new SpotifySongsAdapter(view.getContext(), R.layout.artist_row);
         }
-        listView.setAdapter(mAdapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListView.setAdapter(mAdapter);
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mSelectedIndex = position;
+                refreshSelectedItem();
                 mArtist.setSelectedTrack(position);
                 mOnTracksSelectedListener.onArtistTrackSelected(mArtist);
             }
@@ -59,7 +69,18 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
             mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
         }
 
-        refreshTracks();
+        refreshTracks(savedInstanceState);
+    }
+
+    private void refreshSelectedItem() {
+        if (mSelectedIndex > -1) {
+            mListView.setItemChecked(mSelectedIndex, true);
+            if (mSelectedIndex < mListView.getFirstVisiblePosition() || mSelectedIndex > mListView.getLastVisiblePosition()) {
+                mListView.setSelection(mSelectedIndex);
+            }
+        } else {
+            mListView.setItemChecked(ListView.INVALID_POSITION, false);
+        }
     }
 
     @Override
@@ -67,11 +88,11 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
             mArtist = new SpotifyArtist(savedInstanceState.getBundle(SpotifyArtist.ARTIST_BUNDLE));
-            refreshTracks();
+            refreshTracks(savedInstanceState);
         }
     }
 
-    private void refreshTracks() {
+    private void refreshTracks(Bundle savedInstanceState) {
 
         if (mArtist == null) return;
 
@@ -92,15 +113,24 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
         } else {
             if (mAdapter != null) {
                 mAdapter.clear();
-                mAdapter.addAll(tracks);
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    mAdapter.addAll(tracks);
+                } else {
+                    for (SpotifyTrack track :
+                            tracks) {
+                        mAdapter.add(track);
+                    }
+                }
             }
         }
+
+        restoreState(savedInstanceState);
     }
 
     public void setData(SpotifyArtist artist) {
         if (artist != null && (mArtist == null || !artist.equals(mArtist))) {
             mArtist = artist;
-            refreshTracks();
+            refreshTracks(null);
         }
     }
 
@@ -121,6 +151,29 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBundle(SpotifyArtist.ARTIST_BUNDLE, mArtist.toBundle());
+
+        outState.putInt(STATE_ACTIVATED_POSITION, mSelectedIndex);
+        Log.i("position", "saved position " + mSelectedIndex);
+    }
+
+    private void restoreState(final Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
+                final int position = savedInstanceState.getInt(STATE_ACTIVATED_POSITION);
+
+                if (position == ListView.INVALID_POSITION) {
+                    mSelectedIndex = ListView.INVALID_POSITION;
+                } else {
+                    mSelectedIndex = position;
+                    Log.i("position", "position lookup, position=" + position);
+                }
+                refreshSelectedItem();
+            } else {
+                Log.i("position", "position lookup, no key");
+            }
+        } else {
+            Log.i("position", "saved instance is null");
+        }
     }
 
     @Override
@@ -148,6 +201,28 @@ public class ArtistTracksFragment extends Fragment implements SpotifyArtist.OnTr
 
     @Override
     public void onTracksLoaded(SpotifyArtist artist) {
-        refreshTracks();
+        refreshTracks(null);
+    }
+
+    public void setTrack(SpotifyTrack track) {
+        if (mListView != null) {
+            Log.i(TAG, "setTrack, selected before=" + mListView.getCheckedItemPosition());
+        }
+        if (track != null) {
+            final int current = mListView.getCheckedItemPosition();
+            if (!track.equals(mAdapter.getItem(current))) {
+                for (int i = 0; i < mAdapter.getCount(); i++) {
+                    if (track.equals(mAdapter.getItem(i))) {
+                        mSelectedIndex = i;
+                        refreshSelectedItem();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (mListView != null) {
+            Log.i(TAG, "setTrack, selected after=" + mListView.getCheckedItemPosition());
+        }
     }
 }

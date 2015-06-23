@@ -6,6 +6,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.spotify.gil.spotifystreamer.R;
+import com.spotify.gil.spotifystreamer.fragment.PlayerFragment;
+import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 
 public class PlayerActivity extends PlayerActivityBase {
 
@@ -22,6 +24,18 @@ public class PlayerActivity extends PlayerActivityBase {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
         }
+    }
+
+    protected void showPlayer(SpotifyArtist artist) {
+        mPlayerFragment = new PlayerFragment();
+        final Bundle b = new Bundle();
+        b.putBoolean(PlayerFragment.SHOW_AS_DIALOG, false);
+        if (artist != null) {
+            b.putBundle(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
+        }
+        mPlayerFragment.setArguments(b);
+        mPlayerFragment.setShowsDialog(false);
+        getSupportFragmentManager().beginTransaction().replace(R.id.player_container, mPlayerFragment, PlayerActivityBase.PLAYER_FRAGMENT_TAG).commit();
     }
 
     @Override

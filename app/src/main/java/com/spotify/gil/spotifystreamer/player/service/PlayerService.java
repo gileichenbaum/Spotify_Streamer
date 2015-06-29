@@ -56,6 +56,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private MediaControllerCompat mController;
     private Bitmap mBitmap;
     private boolean mShowNotification;
+    private PendingIntent mStopIntent;
+    private PendingIntent mClickPendingIntent;
+    private NotificationCompat.MediaStyle mNotificationStyle;
 
     private void handleIntent(Intent intent) {
         if (intent == null || intent.getAction() == null)
@@ -163,6 +166,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                                  }
             );
 
+            mNotificationStyle = new NotificationCompat.MediaStyle();
+            mNotificationStyle.setMediaSession(mSession.getSessionToken());
+
         } catch (Exception ignored) {
 
         }
@@ -174,30 +180,18 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             initMediaSessions();
         }
 
-        final Intent intent = new Intent(getApplicationContext(), PlayerService.class);
-        intent.setAction(ACTION_STOP);
-        final PendingIntent stopIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
-
-        final Intent contentIntent = new Intent(getApplicationContext(), ArtistListActivity.class);
-        contentIntent.addCategory(Intent.ACTION_MAIN);
-        contentIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        contentIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        final PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
-        style.setMediaSession(mSession.getSessionToken());
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
-        builder.setStyle(style);
+        builder.setStyle(mNotificationStyle);
         builder.setContentTitle(mCurrentTrack.getTrackName());
         builder.setContentText(mArtist.getName());
         builder.setContentInfo(mCurrentTrack.getAlbumName());
-        builder.setContentIntent(pendingIntent);
-        builder.setDeleteIntent(stopIntent);
+        builder.setContentIntent(mClickPendingIntent);
+        builder.setDeleteIntent(mStopIntent);
         builder.setSmallIcon(R.drawable.ic_play_white_24dp);
         builder.setVisibility(mShowNotification ? NotificationCompat.VISIBILITY_PUBLIC : NotificationCompat.VISIBILITY_SECRET);
-        //builder.setShowWhen(false);
-        //builder.setOngoing(isPlaying());
+        builder.setShowWhen(false);
+        builder.setPriority(mShowNotification ? NotificationCompat.PRIORITY_MAX : NotificationCompat.PRIORITY_MIN);
+        builder.setOngoing(isPlaying());
 
         if (mArtist.getCurrentTrackIndex() > 0) {
             builder.addAction(generateAction(R.drawable.ic_rewind_white_24dp, "prev", ACTION_PREVIOUS));
@@ -212,7 +206,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             builder.addAction(generateAction(R.drawable.ic_fast_forward_grey600_24dp, "next", ACTION_NEXT));
         }
 
-        style.setShowActionsInCompactView(0, 1, 2);
+        mNotificationStyle.setShowActionsInCompactView(0, 1, 2);
 
         if (mBitmap != null) {
             builder.setLargeIcon(mBitmap);
@@ -252,6 +246,16 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         final SharedPreferences sharedPreferences = getSharedPreferences(PlayerActivityBase.PREFERENCES_NAME, 0);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
         mShowNotification = sharedPreferences.getBoolean(PlayerActivityBase.PREF_KEY_SHOW_NOTIFICATION, true);
+
+        final Intent intent = new Intent(getApplicationContext(), PlayerService.class);
+        intent.setAction(ACTION_STOP);
+        mStopIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+
+        final Intent contentIntent = new Intent(getApplicationContext(), ArtistListActivity.class);
+        contentIntent.addCategory(Intent.ACTION_MAIN);
+        contentIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        contentIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        mClickPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Override

@@ -19,8 +19,16 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/show_notification_switch"
+        android:orderInCategory="3"
+        android:title="@string/switch_show_notification_text"
+        app:actionViewClass="android.support.v7.widget.SwitchCompat"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/country_spinner"
+        android:orderInCategory="4"
+        android:title="@string/menu_item_country_text"
+        app:actionViewClass="android.widget.Spinner"
+        app:showAsAction="ifRoom" />
 </menu>

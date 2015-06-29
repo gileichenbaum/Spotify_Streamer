@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Spotify Streamer</string>
-    <string name="action_settings">Settings</string>
     <string name="no_results_found">Sorry, couldn\'t find any artists named %1$s</string>
     <string name="title_activity_artist">Top 10 Tracks</string>
     <string name="title_activity_player">Player Activity</string>
@@ -10,4 +9,8 @@
     <string name="no_tracks_for_artist">Oops, we can\'t find tracks for %1$s</string>
     <string name="playing_now">\u25BA Playing now</string>
     <string name="share">Share</string>
+    <string name="switch_show_notification_text">Lock screen controls</string>
+    <string name="switch_show_notification_text_on">Enabled</string>
+    <string name="switch_show_notification_text_off">Disabled</string>
+    <string name="menu_item_country_text">Country</string>
 </resources>

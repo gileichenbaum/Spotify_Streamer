@@ -58,16 +58,23 @@ public class ArtistListActivity extends PlayerActivityBase implements OnTrackSel
             return;
         }
 
-        mPlayerFragment = new PlayerFragment();
-        final Bundle b = new Bundle();
-        b.putBoolean(PlayerFragment.SHOW_AS_DIALOG, mTwoPane);
-        if (artist != null) {
-            b.putBundle(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
-        }
-        mPlayerFragment.setArguments(b);
-        mPlayerFragment.setShowsDialog(mTwoPane);
+        if (mTwoPane) {
+            mPlayerFragment = new PlayerFragment();
+            final Bundle b = new Bundle();
+            b.putBoolean(PlayerFragment.SHOW_AS_DIALOG, mTwoPane);
+            if (artist != null) {
+                b.putBundle(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
+            }
+            mPlayerFragment.setArguments(b);
+            mPlayerFragment.setShowsDialog(mTwoPane);
 
-        mPlayerFragment.show(getSupportFragmentManager(), PLAYER_FRAGMENT_TAG);
+            mPlayerFragment.show(getSupportFragmentManager(), PLAYER_FRAGMENT_TAG);
+        } else {
+            final Intent playerIntent = new Intent();
+            playerIntent.setClass(this, PlayerActivity.class);
+            playerIntent.putExtra(SpotifyArtist.ARTIST_BUNDLE, artist.toBundle());
+            startActivity(playerIntent);
+        }
        /* if (mPlayerService != null) {
             if (mPlayerService.isPlaying()) {
                 mPlayerService.setArtist(mArtist);

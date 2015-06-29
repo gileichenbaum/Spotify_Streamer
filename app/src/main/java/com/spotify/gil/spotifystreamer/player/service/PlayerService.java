@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 
 import com.spotify.gil.spotifystreamer.R;
 import com.spotify.gil.spotifystreamer.activity.ArtistListActivity;
+import com.spotify.gil.spotifystreamer.activity.PlayerActivityBase;
 import com.spotify.gil.spotifystreamer.internal.SpotifyArtist;
 import com.spotify.gil.spotifystreamer.internal.SpotifyTrack;
 import com.spotify.gil.spotifystreamer.util.Spotify;
@@ -32,7 +34,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class PlayerService extends Service implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+        MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String ACTION_PLAY = "play";
     public static final String ACTION_PAUSE = "pause";
@@ -53,6 +55,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private MediaSessionCompat mSession;
     private MediaControllerCompat mController;
     private Bitmap mBitmap;
+    private boolean mShowNotification;
 
     private void handleIntent(Intent intent) {
         if (intent == null || intent.getAction() == null)
@@ -188,13 +191,13 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         builder.setStyle(style);
         builder.setContentTitle(mCurrentTrack.getTrackName());
         builder.setContentText(mArtist.getName());
-        builder.setDeleteIntent(stopIntent);
         builder.setContentInfo(mCurrentTrack.getAlbumName());
-        builder.setSmallIcon(R.drawable.ic_play_white_24dp);
         builder.setContentIntent(pendingIntent);
-        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-        builder.setShowWhen(false);
-        builder.setOngoing(isPlaying());
+        builder.setDeleteIntent(stopIntent);
+        builder.setSmallIcon(R.drawable.ic_play_white_24dp);
+        builder.setVisibility(mShowNotification ? NotificationCompat.VISIBILITY_PUBLIC : NotificationCompat.VISIBILITY_SECRET);
+        //builder.setShowWhen(false);
+        //builder.setOngoing(isPlaying());
 
         if (mArtist.getCurrentTrackIndex() > 0) {
             builder.addAction(generateAction(R.drawable.ic_rewind_white_24dp, "prev", ACTION_PREVIOUS));
@@ -246,6 +249,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnErrorListener(this);
+        final SharedPreferences sharedPreferences = getSharedPreferences(PlayerActivityBase.PREFERENCES_NAME, 0);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        mShowNotification = sharedPreferences.getBoolean(PlayerActivityBase.PREF_KEY_SHOW_NOTIFICATION, true);
     }
 
     @Override
@@ -277,6 +283,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         mMediaPlayer.stop();
         mMediaPlayer.release();
         mMediaPlayerListener = null;
+        getSharedPreferences(PlayerActivityBase.PREFERENCES_NAME, 0).unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -474,6 +481,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             startNotification();
         } else {
             stop();
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+        if (PlayerActivityBase.PREF_KEY_SHOW_NOTIFICATION.equals(key)) {
+            mShowNotification = sharedPreferences.getBoolean(PlayerActivityBase.PREF_KEY_SHOW_NOTIFICATION, true);
+            startNotification();
         }
     }
 

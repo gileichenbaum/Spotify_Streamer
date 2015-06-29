@@ -37,15 +37,20 @@ public class SpotifyTrack implements Comparable<SpotifyTrack> {
 
         mExternalUrl = track.external_urls == null ? null : track.external_urls.get("spotify");
 
-        if (track.artists.size() == 1) {
-            mArtistName = track.artists.get(0).name;
-        } else {
-            final StringBuilder builder = new StringBuilder();
-            for (ArtistSimple artist : track.artists) {
-                builder.append(artist.name).append(" & ");
+        if (track.artists != null) {
+            if (track.artists.size() == 1) {
+                mArtistName = track.artists.get(0).name;
+            } else {
+                final StringBuilder builder = new StringBuilder();
+                for (ArtistSimple artist : track.artists) {
+                    builder.append(artist.name).append(" & ");
+                }
+                mArtistName = builder.substring(0, builder.length() - 3);
             }
-            mArtistName = builder.substring(0, builder.length() - 3);
+        } else {
+            mArtistName = "";
         }
+
         mTrackUri = track.preview_url;
         mAlbumName = track.album.name;
         mAlbumArtUri = Spotify.getImage(track.album.images, Spotify.ImageSize.LARGE).url;

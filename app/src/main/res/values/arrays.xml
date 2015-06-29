@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="country_names">
+        <item>Andorra</item>
+        <item>Argentina</item>
+        <item>Australia</item>
+        <item>Belgique (français)</item>
+        <item>België (Nederlands)</item>
+        <item>Bolivia </item>
+        <item>Brasil</item>
+        <item>Bulgaria </item>
+        <item>Canada (English)</item>
+        <item>Canada (français)</item>
+        <item>Chile</item>
+        <item>Colombia</item>
+        <item>Costa Rica </item>
+        <item>Cyprus</item>
+        <item>Czech Republic </item>
+        <item>Denmark</item>
+        <item>Deutschland</item>
+        <item>Ecuador </item>
+        <item>El Salvador</item>
+        <item>España</item>
+        <item>Estonia</item>
+        <item>Finland</item>
+        <item>France </item>
+        <item>Guatemala</item>
+        <item>Honduras</item>
+        <item>Hong Kong (English)</item>
+        <item>Iceland</item>
+        <item>Ireland</item>
+        <item>Italia</item>
+        <item>Latvia</item>
+        <item>Liechtenstein</item>
+        <item>Lithuania</item>
+        <item>Luxembourg (français)</item>
+        <item>Luxemburg (Deutsch)</item>
+        <item>Magyarország</item>
+        <item>Malaysia (English)</item>
+        <item>Malaysia (Melayu)</item>
+        <item>Malta</item>
+        <item>Monaco</item>
+        <item>México</item>
+        <item>Nederland</item>
+        <item>New Zealand</item>
+        <item>Nicaragua</item>
+        <item>Norway</item>
+        <item>Panamá</item>
+        <item>Paraguay</item>
+        <item>Perú</item>
+        <item>Philippines</item>
+        <item>Polska</item>
+        <item>Portugal</item>
+        <item>República Dominicana</item>
+        <item>Schweiz (Deutsch)</item>
+        <item>Singapore (English)</item>
+        <item>Slovakia</item>
+        <item>Suisse (français)</item>
+        <item>Sverige</item>
+        <item>Türkiye</item>
+        <item>USA</item>
+        <item>United Kingdom</item>
+        <item>Uruguay</item>
+        <item>Österreich</item>
+        <item>Ελλάδα</item>
+        <item>台灣</item>
+        <item>香港（中文</item>
+    </string-array>
+
+    <string-array name="country_codes">
+        <item>AD</item>
+        <item>AR</item>
+        <item>AU</item>
+        <item>BE-FR</item>
+        <item>BE-NL</item>
+        <item>BO</item>
+        <item>BR</item>
+        <item>BG</item>
+        <item>CA-EN</item>
+        <item>CA-FR</item>
+        <item>CL</item>
+        <item>CO</item>
+        <item>CR</item>
+        <item>CY</item>
+        <item>CZ</item>
+        <item>DK</item>
+        <item>DE</item>
+        <item>EC</item>
+        <item>SV</item>
+        <item>ES</item>
+        <item>EE</item>
+        <item>FI</item>
+        <item>FR</item>
+        <item>GT</item>
+        <item>HN</item>
+        <item>HK-EN</item>
+        <item>IS</item>
+        <item>IE</item>
+        <item>IT</item>
+        <item>LV</item>
+        <item>LI</item>
+        <item>LT</item>
+        <item>LU_FR</item>
+        <item>LU_DE</item>
+        <item>HU</item>
+        <item>MY-EN</item>
+        <item>MY-MS</item>
+        <item>MT</item>
+        <item>MC</item>
+        <item>MX</item>
+        <item>NL</item>
+        <item>NZ</item>
+        <item>NI</item>
+        <item>NO</item>
+        <item>PA</item>
+        <item>PY</item>
+        <item>PE</item>
+        <item>PH</item>
+        <item>PL</item>
+        <item>PT</item>
+        <item>DO</item>
+        <item>CH</item>
+        <item>SG</item>
+        <item>SK</item>
+        <item>CH-FR</item>
+        <item>SE</item>
+        <item>TR</item>
+        <item>US</item>
+        <item>GB</item>
+        <item>UY</item>
+        <item>AT</item>
+        <item>GR</item>
+        <item>TW</item>
+        <item>TW</item>
+        <item>HK-ZH</item>
+    </string-array>
+
+</resources>

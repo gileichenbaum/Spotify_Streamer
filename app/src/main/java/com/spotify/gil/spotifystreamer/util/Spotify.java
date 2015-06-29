@@ -164,6 +164,14 @@ public class Spotify {
         return null;
     }
 
+    public static void setUserCountry(final String countryCode) {
+        if (TextUtils.isEmpty(countryCode)) {
+            COUNTRY_OPTIONS.put("country", "US");
+        } else {
+            COUNTRY_OPTIONS.put("country", countryCode);
+        }
+    }
+
     //Album art thumbnail (large (640px for Now Playing screen)
     // and small (200px for list items))
     public enum ImageSize {
